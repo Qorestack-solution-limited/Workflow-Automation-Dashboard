@@ -1,0 +1,62 @@
+import React, { memo } from 'react';
+import { Handle, Position } from 'reactflow';
+import { MoreHorizontal, AlertCircle, CheckCircle2, Clock, Activity } from 'lucide-react';
+
+const Badge = ({ children, color }: { children: React.ReactNode; color: string }) => {
+  const colorClasses:Record<string, string> = {
+    green: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    blue: 'bg-blue-100 text-blue-700 border-blue-200',
+    orange: 'bg-orange-100 text-orange-700 border-orange-200',
+    purple: 'bg-purple-100 text-purple-700 border-purple-200',
+    red: 'bg-red-100 text-red-700 border-red-200',
+    gray: 'bg-gray-100 text-gray-700 border-gray-200',
+  };
+
+  return (
+    <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${colorClasses[color] || colorClasses.gray} flex items-center gap-1`}>
+      {children}
+    </span>
+  );
+};
+
+export const CustomNode = memo(({ data }: { data: any }) => {
+  return (
+    <div className="w-64 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
+      <div className="p-4">
+        {/* Header */}
+        <div className="flex justify-between items-start mb-2">
+          <div className={`p-2 rounded-lg ${data.iconBg || 'bg-gray-100'} ${data.iconColor || 'text-gray-600'}`}>
+            {data.icon || <Activity size={16} />}
+          </div>
+          <button className="text-gray-400 hover:text-gray-600">
+            <MoreHorizontal size={16} />
+          </button>
+        </div>
+
+        {/* Title & Subtitle */}
+        <div className="mb-3">
+          <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">{data.label}</h3>
+          <p className="text-xs text-gray-500 font-medium">{data.subLabel || 'Workflow Node'}</p>
+        </div>
+
+        {/* Badges/Stats */}
+        <div className="flex flex-wrap gap-2 mt-3">
+           {data.stats && data.stats.map((stat: any, idx: number) => (
+             <Badge key={idx} color={stat.color}>
+               {stat.icon === 'check' && <CheckCircle2 size={10} />}
+               {stat.icon === 'alert' && <AlertCircle size={10} />}
+               {stat.icon === 'clock' && <Clock size={10} />}
+               {stat.label}
+             </Badge>
+           ))}
+        </div>
+      </div>
+
+      {/* Handles */}
+      <Handle type="target" position={Position.Top} className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white transition-colors group-hover:!bg-blue-500" />
+      <Handle type="source" position={Position.Bottom} className="!w-3 !h-3 !bg-gray-400 !border-2 !border-white transition-colors group-hover:!bg-blue-500" />
+    </div>
+  );
+});
+
+export default CustomNode;
