@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Sidebar } from "./components/Sidebar";
 // RightPanel removed as per request to maximize canvas space
-import { WorkflowCanvas } from "./components/WorkflowCanvas";
+import { StructuredWorkflowEditor } from "./components/StructuredWorkflowEditor";
 
 // View Imports
 import { DashboardView } from "./components/views/DashboardView";
@@ -40,7 +40,7 @@ const App = () => {
         return <HelpView />;
       case "workflows":
       default:
-        return <WorkflowCanvas />;
+        return <StructuredWorkflowEditor />;
     }
   };
 
