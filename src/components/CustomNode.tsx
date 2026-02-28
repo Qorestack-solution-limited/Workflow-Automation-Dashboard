@@ -19,9 +19,11 @@ const Badge = ({ children, color }: { children: React.ReactNode; color: string }
   );
 };
 
-export const CustomNode = memo(({ data }: { data: any }) => {
+export const CustomNode = memo(({ data, selected }: { data: any; selected?: boolean }) => {
+  const isContainer = data.label === 'Condition' || data.label === 'Loop' || data.isContainer;
+
   return (
-    <div className="w-64 bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group">
+    <div className={`${isContainer ? 'w-80 min-h-[200px] border-dashed' : 'w-64'} bg-white rounded-xl shadow-sm border ${selected ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-200'} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group`}>
       <div className="p-4">
         {/* Header */}
         <div className="flex justify-between items-start mb-2">
@@ -35,7 +37,14 @@ export const CustomNode = memo(({ data }: { data: any }) => {
 
         {/* Title & Subtitle */}
         <div className="mb-3">
-          <h3 className="font-semibold text-gray-900 text-sm leading-tight mb-1">{data.label}</h3>
+          <div className="flex justify-between items-center mb-1">
+            <h3 className="font-semibold text-gray-900 text-sm leading-tight">{data.label}</h3>
+            {data.branch && (
+               <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${data.branch === 'true' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
+                 {data.branch}
+               </span>
+            )}
+          </div>
           <p className="text-xs text-gray-500 font-medium">{data.subLabel || 'Workflow Node'}</p>
         </div>
 
@@ -50,6 +59,24 @@ export const CustomNode = memo(({ data }: { data: any }) => {
              </Badge>
            ))}
         </div>
+
+        {/* Conditional Branches */}
+        {data.label === 'Condition' && (
+          <div className="mt-6 flex gap-4 h-32">
+            <div className="flex-1 border border-emerald-200 bg-emerald-50/30 rounded-lg p-2 flex flex-col items-center">
+              <span className="text-[10px] font-bold text-emerald-600 uppercase mb-2">True</span>
+              <div className="flex-1 w-full border-2 border-dashed border-emerald-100 rounded-md flex items-center justify-center">
+                 <span className="text-[8px] text-emerald-400">Drop here</span>
+              </div>
+            </div>
+            <div className="flex-1 border border-red-200 bg-red-50/30 rounded-lg p-2 flex flex-col items-center">
+              <span className="text-[10px] font-bold text-red-600 uppercase mb-2">False</span>
+              <div className="flex-1 w-full border-2 border-dashed border-red-100 rounded-md flex items-center justify-center">
+                 <span className="text-[8px] text-red-400">Drop here</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Handles */}
