@@ -21,9 +21,10 @@ const Badge = ({ children, color }: { children: React.ReactNode; color: string }
 
 export const CustomNode = memo(({ id, data, selected }: { id: string; data: any; selected?: boolean }) => {
   const isContainer = data.label === 'Condition' || data.label === 'Loop' || data.isContainer;
+  const isTrigger = ['Webhook', 'Schedule', 'Form Submit', 'Manual Trigger', 'Incoming SFTP', 'Shopify Webhook'].includes(data.label);
 
   return (
-    <div className={`${isContainer ? 'w-80 min-h-[200px] border-dashed' : 'w-64'} bg-white rounded-xl shadow-sm border ${selected ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-200'} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group`}>
+    <div className={`${isContainer ? 'w-80 min-h-[200px] border-dashed' : 'w-64'} bg-white rounded-xl shadow-sm border ${selected ? 'border-blue-500 ring-2 ring-blue-500/20' : 'border-gray-200'} ${isTrigger ? 'border-l-4 border-l-purple-500' : ''} hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 group`}>
       <div className="p-4">
         {/* Header */}
         <div className="flex justify-between items-start mb-2">
@@ -38,7 +39,12 @@ export const CustomNode = memo(({ id, data, selected }: { id: string; data: any;
         {/* Title & Subtitle */}
         <div className="mb-3">
           <div className="flex justify-between items-center mb-1">
-            <h3 className="font-semibold text-gray-900 text-sm leading-tight">{data.label}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900 text-sm leading-tight">{data.label}</h3>
+              {isTrigger && (
+                <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-purple-100 text-purple-700 uppercase">Trigger</span>
+              )}
+            </div>
             {data.branch && (
                <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded uppercase ${data.branch === 'true' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                  {data.branch}
@@ -58,6 +64,18 @@ export const CustomNode = memo(({ id, data, selected }: { id: string; data: any;
                {stat.label}
              </Badge>
            ))}
+           {data.status === 'success' && (
+             <Badge color="green">
+               <CheckCircle2 size={10} />
+               Success
+             </Badge>
+           )}
+           {data.lastTested && (
+             <div className="flex items-center gap-1 text-[9px] text-gray-400 font-medium ml-auto">
+                <Clock size={8} />
+                {new Date(data.lastTested).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+             </div>
+           )}
         </div>
 
         {/* Configuration Summary */}

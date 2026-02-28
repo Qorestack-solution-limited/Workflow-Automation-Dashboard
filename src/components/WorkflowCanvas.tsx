@@ -105,57 +105,106 @@ const NodeConfigPanel = ({
           </>
         );
       case "Data Mapper":
-        const mappings = node.data.mappings || [{ from: "", to: "" }];
+        const mappings = node.data.mappings || [{ from: "", to: "", start: "0", length: "" }];
         return (
-          <div className="space-y-4">
-            <Label className="text-xs font-semibold uppercase text-gray-400">Mappings</Label>
-            {mappings.map((m: any, idx: number) => (
-              <div key={idx} className="flex gap-2 items-end">
-                <div className="flex-1 space-y-1">
-                  <Input
-                    value={m.from}
-                    onChange={(e) => {
-                      const newMappings = [...mappings];
-                      newMappings[idx].from = e.target.value;
-                      onUpdate(node.id, { mappings: newMappings });
-                    }}
-                    placeholder="From"
-                    className="h-8 text-xs"
-                  />
-                  <Input
-                    value={m.to}
-                    onChange={(e) => {
-                      const newMappings = [...mappings];
-                      newMappings[idx].to = e.target.value;
-                      onUpdate(node.id, { mappings: newMappings });
-                    }}
-                    placeholder="To"
-                    className="h-8 text-xs"
-                  />
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-gray-400 hover:text-red-500"
-                  onClick={() => {
-                    const newMappings = mappings.filter((_: any, i: number) => i !== idx);
-                    onUpdate(node.id, { mappings: newMappings });
-                  }}
-                >
-                  <Trash size={14} />
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <Label className="text-xs font-semibold uppercase text-gray-400">Node Filters</Label>
+                <Button variant="ghost" size="sm" className="h-6 text-[10px] text-blue-600 px-2">
+                  <Plus size={10} className="mr-1" /> Add node filter
                 </Button>
               </div>
-            ))}
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full text-xs"
-              onClick={() => {
-                onUpdate(node.id, { mappings: [...mappings, { from: "", to: "" }] });
-              }}
-            >
-              <Plus size={14} className="mr-1" /> Add Mapping
-            </Button>
+              <div className="text-[10px] text-gray-400 italic bg-gray-50 p-2 rounded border border-dashed">
+                No filters defined.
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Mappings</Label>
+              {mappings.map((m: any, idx: number) => (
+                <div key={idx} className="p-3 bg-gray-50 rounded-lg border border-gray-100 space-y-3 relative group/mapping">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-gray-500 uppercase">From</Label>
+                      <Input
+                        value={m.from}
+                        onChange={(e) => {
+                          const newMappings = [...mappings];
+                          newMappings[idx].from = e.target.value;
+                          onUpdate(node.id, { mappings: newMappings });
+                        }}
+                        placeholder="Path"
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-gray-500 uppercase">To</Label>
+                      <Input
+                        value={m.to}
+                        onChange={(e) => {
+                          const newMappings = [...mappings];
+                          newMappings[idx].to = e.target.value;
+                          onUpdate(node.id, { mappings: newMappings });
+                        }}
+                        placeholder="Path"
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-2 border-t border-gray-200/50">
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-gray-500 uppercase">Start</Label>
+                      <Input
+                        type="number"
+                        value={m.start}
+                        onChange={(e) => {
+                          const newMappings = [...mappings];
+                          newMappings[idx].start = e.target.value;
+                          onUpdate(node.id, { mappings: newMappings });
+                        }}
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[10px] text-gray-500 uppercase">Length</Label>
+                      <Input
+                        type="number"
+                        value={m.length}
+                        onChange={(e) => {
+                          const newMappings = [...mappings];
+                          newMappings[idx].length = e.target.value;
+                          onUpdate(node.id, { mappings: newMappings });
+                        }}
+                        placeholder="Max"
+                        className="h-8 text-xs bg-white"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6 absolute -top-2 -right-2 bg-white shadow-sm border border-gray-100 text-gray-400 hover:text-red-500 opacity-0 group-hover/mapping:opacity-100 transition-opacity"
+                    onClick={() => {
+                      const newMappings = mappings.filter((_: any, i: number) => i !== idx);
+                      onUpdate(node.id, { mappings: newMappings });
+                    }}
+                  >
+                    <Trash size={12} />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs border-dashed"
+                onClick={() => {
+                  onUpdate(node.id, { mappings: [...mappings, { from: "", to: "", start: "0", length: "" }] });
+                }}
+              >
+                <Plus size={14} className="mr-1" /> Add Mapping
+              </Button>
+            </div>
           </div>
         );
       case "HTTP Lookup":
@@ -243,6 +292,41 @@ const NodeConfigPanel = ({
             <p className="text-[10px] text-gray-400 italic">Example: 0 * * * * (Every hour)</p>
           </div>
         );
+      case "Form Submit":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label htmlFor="form-id" className="text-xs font-semibold uppercase text-gray-400">Form ID</Label>
+              <Input
+                id="form-id"
+                value={node.data.formId || ""}
+                onChange={(e) => onUpdate(node.id, { formId: e.target.value })}
+                placeholder="e.g. contact-form-001"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="success-msg" className="text-xs font-semibold uppercase text-gray-400">Success Message</Label>
+              <Input
+                id="success-msg"
+                value={node.data.successMessage || ""}
+                onChange={(e) => onUpdate(node.id, { successMessage: e.target.value })}
+                placeholder="Thank you for your submission!"
+              />
+            </div>
+          </>
+        );
+      case "Manual Trigger":
+        return (
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase text-gray-400">Input Schema (JSON)</Label>
+            <textarea
+              className="w-full h-32 p-2 bg-gray-900 text-gray-100 font-mono text-xs rounded border border-gray-700 outline-none focus:ring-1 focus:ring-blue-500"
+              value={node.data.schema || '{\n  "type": "object",\n  "properties": {}\n}'}
+              onChange={(e) => onUpdate(node.id, { schema: e.target.value })}
+              spellCheck={false}
+            />
+          </div>
+        );
       case "JS Code":
         return (
           <div className="space-y-2">
@@ -276,18 +360,16 @@ const NodeConfigPanel = ({
       </div>
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         <div className="space-y-2">
-          <Label htmlFor="node-label" className="text-xs font-semibold uppercase text-gray-400">Label</Label>
+          <Label className="text-xs font-semibold uppercase text-gray-400">Label</Label>
           <Input
-            id="node-label"
             value={node.data.label}
             onChange={(e) => onUpdate(node.id, { label: e.target.value })}
             className="h-9"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="node-sublabel" className="text-xs font-semibold uppercase text-gray-400">Sub Label</Label>
+          <Label className="text-xs font-semibold uppercase text-gray-400">Sub Label</Label>
           <Input
-            id="node-sublabel"
             value={node.data.subLabel}
             onChange={(e) => onUpdate(node.id, { subLabel: e.target.value })}
             className="h-9"
@@ -297,6 +379,24 @@ const NodeConfigPanel = ({
         <div className="pt-4 border-t border-gray-100 space-y-6">
           {renderTransformerFields()}
         </div>
+
+        {['Webhook', 'Schedule', 'Form Submit', 'Manual Trigger', 'Incoming SFTP', 'Shopify Webhook'].includes(node.data.label) && (
+          <div className="pt-6">
+            <Button
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white gap-2"
+              onClick={() => onUpdate(node.id, {
+                lastTested: new Date().toISOString(),
+                status: 'success'
+              })}
+            >
+              <Zap size={16} />
+              Test Trigger
+            </Button>
+            <p className="text-[10px] text-gray-400 text-center mt-2">
+              Simulates an incoming event to test connected nodes.
+            </p>
+          </div>
+        )}
       </div>
       <div className="p-4 border-t border-gray-100">
         <button
