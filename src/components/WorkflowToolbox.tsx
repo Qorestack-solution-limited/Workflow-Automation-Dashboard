@@ -12,16 +12,22 @@ import {
   Slack,
   MessageSquare,
   Search,
+  GitBranch,
+  Repeat,
 } from "lucide-react";
 
-const ToolboxItem = ({ type, label, icon: Icon, color }: any) => {
+const ToolboxItem = ({ type, label, icon: Icon, color, iconName }: any) => {
   const onDragStart = (
     event: React.DragEvent,
     nodeType: string,
     nodeLabel: string,
+    nodeIcon: string,
+    nodeColor: string,
   ) => {
     event.dataTransfer.setData("application/reactflow", nodeType);
     event.dataTransfer.setData("application/label", nodeLabel);
+    event.dataTransfer.setData("application/icon", nodeIcon);
+    event.dataTransfer.setData("application/color", nodeColor);
     event.dataTransfer.effectAllowed = "move";
   };
 
@@ -29,7 +35,7 @@ const ToolboxItem = ({ type, label, icon: Icon, color }: any) => {
     <div
       className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg cursor-grab hover:border-blue-400 hover:shadow-sm transition-all mb-2 group active:cursor-grabbing"
       draggable
-      onDragStart={(e) => onDragStart(e, "custom", label)}
+      onDragStart={(e) => onDragStart(e, "custom", label, iconName, color)}
     >
       <div
         className={`p-1.5 rounded-md bg-gray-50 text-gray-500 group-hover:${color} group-hover:bg-opacity-10 transition-colors`}
@@ -67,29 +73,49 @@ export const WorkflowToolbox = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto p-4">
+        <CategoryLabel label="Logic" />
+        <ToolboxItem
+          type="custom"
+          label="Condition"
+          icon={GitBranch}
+          iconName="GitBranch"
+          color="text-amber-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="Loop"
+          icon={Repeat}
+          iconName="Repeat"
+          color="text-cyan-600"
+        />
+
         <CategoryLabel label="Triggers & Events" />
         <ToolboxItem
           type="custom"
           label="Webhook"
           icon={Globe}
+          iconName="Globe"
           color="text-purple-600"
         />
         <ToolboxItem
           type="custom"
           label="Schedule"
           icon={Clock}
+          iconName="Clock"
           color="text-blue-600"
         />
         <ToolboxItem
           type="custom"
           label="Form Submit"
           icon={Zap}
+          iconName="Zap"
           color="text-orange-600"
         />
         <ToolboxItem
           type="custom"
           label="Manual Trigger"
           icon={Zap}
+          iconName="Zap"
           color="text-gray-600"
         />
 
@@ -98,24 +124,28 @@ export const WorkflowToolbox = () => {
           type="custom"
           label="JSON Parser"
           icon={FileJson}
+          iconName="FileJson"
           color="text-indigo-600"
         />
         <ToolboxItem
           type="custom"
           label="Data Mapper"
           icon={ArrowRightLeft}
+          iconName="ArrowRightLeft"
           color="text-green-600"
         />
         <ToolboxItem
           type="custom"
           label="Filter"
           icon={Filter}
+          iconName="Filter"
           color="text-red-600"
         />
         <ToolboxItem
           type="custom"
           label="JS Code"
           icon={Code}
+          iconName="Code"
           color="text-yellow-600"
         />
 
@@ -124,24 +154,28 @@ export const WorkflowToolbox = () => {
           type="custom"
           label="Database Query"
           icon={Database}
+          iconName="Database"
           color="text-blue-500"
         />
         <ToolboxItem
           type="custom"
           label="Send Email"
           icon={Mail}
+          iconName="Mail"
           color="text-red-500"
         />
         <ToolboxItem
           type="custom"
           label="Slack Message"
           icon={Slack}
+          iconName="Slack"
           color="text-purple-500"
         />
         <ToolboxItem
           type="custom"
           label="OpenAI Prompt"
           icon={MessageSquare}
+          iconName="MessageSquare"
           color="text-emerald-500"
         />
       </div>
