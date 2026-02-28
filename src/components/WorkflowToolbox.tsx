@@ -14,6 +14,7 @@ import {
   Search,
   GitBranch,
   Repeat,
+  FileText,
 } from "lucide-react";
 
 const ToolboxItem = ({ type, label, icon: Icon, color, iconName }: any) => {
@@ -31,6 +32,23 @@ const ToolboxItem = ({ type, label, icon: Icon, color, iconName }: any) => {
     event.dataTransfer.effectAllowed = "move";
   };
 
+  const hoverColors: Record<string, string> = {
+    "text-amber-600": "group-hover:text-amber-600 group-hover:bg-amber-600/10",
+    "text-cyan-600": "group-hover:text-cyan-600 group-hover:bg-cyan-600/10",
+    "text-purple-600": "group-hover:text-purple-600 group-hover:bg-purple-600/10",
+    "text-blue-600": "group-hover:text-blue-600 group-hover:bg-blue-600/10",
+    "text-orange-600": "group-hover:text-orange-600 group-hover:bg-orange-600/10",
+    "text-gray-600": "group-hover:text-gray-600 group-hover:bg-gray-600/10",
+    "text-indigo-600": "group-hover:text-indigo-600 group-hover:bg-indigo-600/10",
+    "text-green-600": "group-hover:text-green-600 group-hover:bg-green-600/10",
+    "text-blue-500": "group-hover:text-blue-500 group-hover:bg-blue-500/10",
+    "text-red-600": "group-hover:text-red-600 group-hover:bg-red-600/10",
+    "text-yellow-600": "group-hover:text-yellow-600 group-hover:bg-yellow-600/10",
+    "text-red-500": "group-hover:text-red-500 group-hover:bg-red-500/10",
+    "text-purple-500": "group-hover:text-purple-500 group-hover:bg-purple-500/10",
+    "text-emerald-500": "group-hover:text-emerald-500 group-hover:bg-emerald-500/10",
+  };
+
   return (
     <div
       className="flex items-center gap-3 p-3 bg-white border border-gray-200 rounded-lg cursor-grab hover:border-blue-400 hover:shadow-sm transition-all mb-2 group active:cursor-grabbing"
@@ -38,7 +56,7 @@ const ToolboxItem = ({ type, label, icon: Icon, color, iconName }: any) => {
       onDragStart={(e) => onDragStart(e, "custom", label, iconName, color)}
     >
       <div
-        className={`p-1.5 rounded-md bg-gray-50 text-gray-500 group-hover:${color} group-hover:bg-opacity-10 transition-colors`}
+        className={`p-1.5 rounded-md bg-gray-50 text-gray-500 ${hoverColors[color] || ""} transition-colors`}
       >
         <Icon size={16} />
       </div>
@@ -122,9 +140,9 @@ export const WorkflowToolbox = () => {
         <CategoryLabel label="Transformers" />
         <ToolboxItem
           type="custom"
-          label="JSON Parser"
-          icon={FileJson}
-          iconName="FileJson"
+          label="Set Value"
+          icon={FileText}
+          iconName="FileText"
           color="text-indigo-600"
         />
         <ToolboxItem
@@ -133,6 +151,13 @@ export const WorkflowToolbox = () => {
           icon={ArrowRightLeft}
           iconName="ArrowRightLeft"
           color="text-green-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="HTTP Lookup"
+          icon={Globe}
+          iconName="Globe"
+          color="text-blue-500"
         />
         <ToolboxItem
           type="custom"

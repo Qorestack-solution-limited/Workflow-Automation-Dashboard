@@ -19,7 +19,7 @@ const Badge = ({ children, color }: { children: React.ReactNode; color: string }
   );
 };
 
-export const CustomNode = memo(({ data, selected }: { data: any; selected?: boolean }) => {
+export const CustomNode = memo(({ id, data, selected }: { id: string; data: any; selected?: boolean }) => {
   const isContainer = data.label === 'Condition' || data.label === 'Loop' || data.isContainer;
 
   return (
@@ -58,6 +58,62 @@ export const CustomNode = memo(({ data, selected }: { data: any; selected?: bool
                {stat.label}
              </Badge>
            ))}
+        </div>
+
+        {/* Configuration Summary */}
+        <div className="mt-3 pt-3 border-t border-gray-50 space-y-1.5">
+          {data.label === "Set Value" && data.key && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">Set</span>
+              <span className="text-[11px] font-mono bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 truncate flex-1">
+                {data.key} = {data.value || "..."}
+              </span>
+            </div>
+          )}
+          {data.label === "Data Mapper" && data.mappings && data.mappings.length > 0 && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">Maps</span>
+              <span className="text-[11px] font-medium text-gray-600">
+                {data.mappings.length} mapping{data.mappings.length > 1 ? 's' : ''} defined
+              </span>
+            </div>
+          )}
+          {data.label === "HTTP Lookup" && data.url && (
+            <div className="flex items-center gap-2">
+              <span className={`text-[10px] font-bold uppercase ${data.method === 'POST' ? 'text-orange-500' : 'text-blue-500'}`}>
+                {data.method || 'GET'}
+              </span>
+              <span className="text-[11px] text-gray-600 truncate flex-1">
+                {data.url}
+              </span>
+            </div>
+          )}
+          {data.label === "Filter" && data.conditionField && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-gray-400 uppercase">If</span>
+              <span className="text-[11px] font-medium text-gray-600 truncate flex-1">
+                {data.conditionField} {data.operator || 'equals'} ...
+              </span>
+            </div>
+          )}
+          {data.label === "Webhook" && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-purple-500 uppercase">{data.method || 'POST'}</span>
+              <span className="text-[11px] text-gray-500 truncate flex-1">/hooks/{id}</span>
+            </div>
+          )}
+          {data.label === "Schedule" && data.cron && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-blue-500 uppercase">Cron</span>
+              <span className="text-[11px] text-gray-600 font-mono">{data.cron}</span>
+            </div>
+          )}
+          {data.label === "JS Code" && (
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-bold text-yellow-500 uppercase">Code</span>
+              <span className="text-[11px] text-gray-500 italic">Custom script</span>
+            </div>
+          )}
         </div>
 
         {/* Conditional Branches */}

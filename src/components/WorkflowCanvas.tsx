@@ -40,6 +40,8 @@ import {
 import { WorkflowToolbox } from "./WorkflowToolbox";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Button } from "./ui/button";
+import { Plus, Trash } from "lucide-react";
 
 const iconMap: Record<string, any> = {
   User: <User size={16} />,
@@ -79,8 +81,187 @@ const NodeConfigPanel = ({
 }) => {
   if (!node) return null;
 
+  const renderTransformerFields = () => {
+    switch (node.data.label) {
+      case "Set Value":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Key / Path</Label>
+              <Input
+                value={node.data.key || ""}
+                onChange={(e) => onUpdate(node.id, { key: e.target.value })}
+                placeholder="e.g. customer.name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Value</Label>
+              <Input
+                value={node.data.value || ""}
+                onChange={(e) => onUpdate(node.id, { value: e.target.value })}
+                placeholder="Static value or {{var}}"
+              />
+            </div>
+          </>
+        );
+      case "Data Mapper":
+        const mappings = node.data.mappings || [{ from: "", to: "" }];
+        return (
+          <div className="space-y-4">
+            <Label className="text-xs font-semibold uppercase text-gray-400">Mappings</Label>
+            {mappings.map((m: any, idx: number) => (
+              <div key={idx} className="flex gap-2 items-end">
+                <div className="flex-1 space-y-1">
+                  <Input
+                    value={m.from}
+                    onChange={(e) => {
+                      const newMappings = [...mappings];
+                      newMappings[idx].from = e.target.value;
+                      onUpdate(node.id, { mappings: newMappings });
+                    }}
+                    placeholder="From"
+                    className="h-8 text-xs"
+                  />
+                  <Input
+                    value={m.to}
+                    onChange={(e) => {
+                      const newMappings = [...mappings];
+                      newMappings[idx].to = e.target.value;
+                      onUpdate(node.id, { mappings: newMappings });
+                    }}
+                    placeholder="To"
+                    className="h-8 text-xs"
+                  />
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-gray-400 hover:text-red-500"
+                  onClick={() => {
+                    const newMappings = mappings.filter((_: any, i: number) => i !== idx);
+                    onUpdate(node.id, { mappings: newMappings });
+                  }}
+                >
+                  <Trash size={14} />
+                </Button>
+              </div>
+            ))}
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full text-xs"
+              onClick={() => {
+                onUpdate(node.id, { mappings: [...mappings, { from: "", to: "" }] });
+              }}
+            >
+              <Plus size={14} className="mr-1" /> Add Mapping
+            </Button>
+          </div>
+        );
+      case "HTTP Lookup":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Endpoint URL</Label>
+              <Input
+                value={node.data.url || ""}
+                onChange={(e) => onUpdate(node.id, { url: e.target.value })}
+                placeholder="https://api.example.com/..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Method</Label>
+              <select
+                className="w-full h-9 px-3 py-1 bg-white border border-gray-200 rounded-md text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                value={node.data.method || "GET"}
+                onChange={(e) => onUpdate(node.id, { method: e.target.value })}
+              >
+                <option>GET</option>
+                <option>POST</option>
+                <option>PUT</option>
+              </select>
+            </div>
+          </>
+        );
+      case "Filter":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Condition Field</Label>
+              <Input
+                value={node.data.conditionField || ""}
+                onChange={(e) => onUpdate(node.id, { conditionField: e.target.value })}
+                placeholder="e.g. status"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Operator</Label>
+              <select
+                className="w-full h-9 px-3 py-1 bg-white border border-gray-200 rounded-md text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                value={node.data.operator || "equals"}
+                onChange={(e) => onUpdate(node.id, { operator: e.target.value })}
+              >
+                <option value="equals">Equals</option>
+                <option value="not_equals">Not Equals</option>
+                <option value="contains">Contains</option>
+                <option value="exists">Exists</option>
+              </select>
+            </div>
+          </>
+        );
+      case "Webhook":
+        return (
+          <>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Webhook URL</Label>
+              <div className="p-2 bg-gray-50 border border-gray-200 rounded text-[10px] font-mono break-all text-gray-600">
+                https://hooks.flowbuild.com/{node.id}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold uppercase text-gray-400">Method</Label>
+              <select
+                className="w-full h-9 px-3 py-1 bg-white border border-gray-200 rounded-md text-sm outline-none focus:ring-1 focus:ring-blue-500"
+                value={node.data.method || "POST"}
+                onChange={(e) => onUpdate(node.id, { method: e.target.value })}
+              >
+                <option>POST</option>
+                <option>GET</option>
+              </select>
+            </div>
+          </>
+        );
+      case "Schedule":
+        return (
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase text-gray-400">Cron Expression</Label>
+            <Input
+              value={node.data.cron || ""}
+              onChange={(e) => onUpdate(node.id, { cron: e.target.value })}
+              placeholder="0 * * * *"
+            />
+            <p className="text-[10px] text-gray-400 italic">Example: 0 * * * * (Every hour)</p>
+          </div>
+        );
+      case "JS Code":
+        return (
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold uppercase text-gray-400">JavaScript Code</Label>
+            <textarea
+              className="w-full h-32 p-2 bg-gray-900 text-gray-100 font-mono text-xs rounded border border-gray-700 outline-none focus:ring-1 focus:ring-blue-500"
+              value={node.data.code || "// input contains the incoming data\nreturn input;"}
+              onChange={(e) => onUpdate(node.id, { code: e.target.value })}
+              spellCheck={false}
+            />
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="w-72 h-full bg-white border-l border-gray-200 flex flex-col shrink-0">
+    <div className="w-80 h-full bg-white border-l border-gray-200 flex flex-col shrink-0">
       <div className="p-4 border-b border-gray-100 flex justify-between items-center">
         <div>
           <h2 className="font-bold text-gray-900">Configure</h2>
@@ -111,6 +292,10 @@ const NodeConfigPanel = ({
             onChange={(e) => onUpdate(node.id, { subLabel: e.target.value })}
             className="h-9"
           />
+        </div>
+
+        <div className="pt-4 border-t border-gray-100 space-y-6">
+          {renderTransformerFields()}
         </div>
       </div>
       <div className="p-4 border-t border-gray-100">
@@ -396,9 +581,16 @@ const WorkflowCanvasContent = () => {
           setNodes((nds) =>
             nds.map((n) => {
               if (n.id === node.id) {
-                // Adjust position to be relative to parent
-                const relX = n.position.x - parentNode.position.x;
-                const relY = n.position.y - parentNode.position.y;
+                // Get parent's absolute position
+                const parentAbsX = parentNode.positionAbsolute?.x || parentNode.position.x;
+                const parentAbsY = parentNode.positionAbsolute?.y || parentNode.position.y;
+
+                // Get node's current absolute position
+                const nodeAbsX = node.positionAbsolute?.x || node.position.x;
+                const nodeAbsY = node.positionAbsolute?.y || node.position.y;
+
+                const relX = nodeAbsX - parentAbsX;
+                const relY = nodeAbsY - parentAbsY;
                 const position = { x: relX, y: relY };
 
                 let branch = undefined;
@@ -418,6 +610,25 @@ const WorkflowCanvasContent = () => {
             }),
           );
         }
+      } else if (!parentId && node.parentNode) {
+        // Dragged out of parent, return to top level
+        setNodes((nds) =>
+          nds.map((n) => {
+            if (n.id === node.id) {
+              const nodeAbsX = node.positionAbsolute?.x || node.position.x;
+              const nodeAbsY = node.positionAbsolute?.y || node.position.y;
+
+              return {
+                ...n,
+                parentNode: undefined,
+                extent: undefined,
+                position: { x: nodeAbsX, y: nodeAbsY },
+                data: { ...n.data, branch: undefined }
+              };
+            }
+            return n;
+          })
+        );
       }
     },
     [getNode, setNodes],
@@ -478,9 +689,13 @@ const WorkflowCanvasContent = () => {
       if (parentNode && (parentNode.data.label === "Condition" || parentNode.data.label === "Loop")) {
         newNode.parentNode = parentNode.id;
         newNode.extent = "parent";
-        // adjust position to be relative to parent
-        const relX = position.x - parentNode.position.x;
-        const relY = position.y - parentNode.position.y;
+
+        // Adjust position relative to parent's absolute position
+        const parentAbsX = parentNode.positionAbsolute?.x || parentNode.position.x;
+        const parentAbsY = parentNode.positionAbsolute?.y || parentNode.position.y;
+
+        const relX = position.x - parentAbsX;
+        const relY = position.y - parentAbsY;
         newNode.position = { x: relX, y: relY };
 
         if (parentNode.data.label === "Condition") {
