@@ -136,6 +136,20 @@ export const WorkflowToolbox = () => {
           iconName="Zap"
           color="text-gray-600"
         />
+        <ToolboxItem
+          type="custom"
+          label="Incoming SFTP"
+          icon={Database}
+          iconName="Database"
+          color="text-indigo-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="Shopify Webhook"
+          icon={Globe}
+          iconName="Globe"
+          color="text-emerald-500"
+        />
 
         <CategoryLabel label="Transformers" />
         <ToolboxItem
