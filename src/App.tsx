@@ -20,6 +20,13 @@ const App = () => {
     setcollapsed(!collapsed);
   };
 
+  const handleNavigate = (view: string) => {
+    setActiveView(view);
+    if (view === "workflows") {
+      setcollapsed(true);
+    }
+  };
+
   const renderContent = () => {
     switch (activeView) {
       case "dashboard":
@@ -49,7 +56,7 @@ const App = () => {
       <div className="hidden md:flex flex-col h-full shrink-0">
         <Sidebar
           activeView={activeView}
-          onNavigate={setActiveView}
+          onNavigate={handleNavigate}
           collapsed={collapsed}
         />
       </div>
