@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Sidebar } from "./components/Sidebar";
-// RightPanel removed as per request to maximize canvas space
 import { StructuredWorkflowEditor } from "./components/StructuredWorkflowEditor";
+import { Menu, X } from "lucide-react";
 
 // View Imports
 import { DashboardView } from "./components/views/DashboardView";
@@ -15,15 +15,22 @@ import { HelpView } from "./components/views/HelpView";
 
 const App = () => {
   const [activeView, setActiveView] = useState("dashboard");
-  const [collapsed, setcollapsed] = useState(false);
-  const togglesidebar = () => {
-    setcollapsed(!collapsed);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed(!isSidebarCollapsed);
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   const handleNavigate = (view: string) => {
     setActiveView(view);
+    setIsMobileMenuOpen(false); // Close mobile menu on navigation
     if (view === "workflows") {
-      setcollapsed(true);
+      setIsSidebarCollapsed(true);
     }
   };
 
@@ -53,20 +60,42 @@ const App = () => {
 
   return (
     <div className="flex h-screen w-screen bg-gray-50 overflow-hidden font-sans text-gray-900 selection:bg-blue-100">
-      <div className="hidden md:flex flex-col h-full shrink-0">
-        <Sidebar
-          activeView={activeView}
-          onNavigate={handleNavigate}
-          collapsed={collapsed}
+      {/* Mobile Header */}
+      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 flex items-center px-4 justify-between">
+        <div className="flex items-center gap-2 font-bold text-gray-900">
+          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">F</div>
+          <span>FlowBuild</span>
+        </div>
+        <button
+          onClick={toggleMobileMenu}
+          className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </header>
+
+      {/* Sidebar - Desktop and Mobile Overlay */}
+      <div className={`
+        fixed inset-0 z-40 md:relative md:flex md:inset-auto
+        ${isMobileMenuOpen ? "block" : "hidden"}
+      `}>
+        {/* Backdrop for mobile */}
+        <div
+          className="absolute inset-0 bg-gray-900/50 md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
         />
+
+        <div className="relative h-full shrink-0 z-50">
+          <Sidebar
+            activeView={activeView}
+            onNavigate={handleNavigate}
+            collapsed={isSidebarCollapsed}
+            onToggle={toggleSidebar}
+          />
+        </div>
       </div>
-      <button
-        className="text-2xl  text cursor-pointer  mb-187 "
-        onClick={togglesidebar}
-      >
-        {""}
-      </button>
-      <main className="flex-1 h-full relative flex flex-col min-w-0 bg-gray-50">
+
+      <main className="flex-1 h-full relative flex flex-col min-w-0 bg-gray-50 pt-16 md:pt-0">
         {renderContent()}
       </main>
     </div>

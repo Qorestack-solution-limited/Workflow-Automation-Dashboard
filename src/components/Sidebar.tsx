@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   LayoutDashboard,
   ShieldCheck,
@@ -10,13 +9,15 @@ import {
   Settings,
   HelpCircle,
   Hexagon,
-  icons,
-  TypeIcon,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface SidebarProps {
+  collapsed: boolean;
   activeView: string;
   onNavigate: (view: string) => void;
+  onToggle: () => void;
 }
 
 const SidebarItem = ({
@@ -38,7 +39,7 @@ const SidebarItem = ({
 }) => (
   <button
     onClick={onClick}
-    className={`flex items-center px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
+    className={`w-full flex items-center px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
       active ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-gray-100"
     } ${collapsed ? "justify-center" : "gap-3"}`}
   >
@@ -58,53 +59,43 @@ const SidebarItem = ({
   </button>
 );
 
-type SectionLabelProps = {
-  label: string;
-  collapsed?: boolean;
-};
-
-const SectionLabel = ({ label, collapsed = false }: SectionLabelProps) => (
-  <div className="px-3 mb-2 mt-6 text-xs font-semibold text-gray-400 uppercase tracking-wider">
-    {!collapsed && label}
+const SectionLabel = ({ label, collapsed = false }: { label: string; collapsed?: boolean }) => (
+  <div className={`px-3 mb-2 mt-6 text-xs font-semibold text-gray-400 uppercase tracking-wider ${collapsed ? "text-center opacity-0 h-0 my-0 overflow-hidden" : ""}`}>
+    {label}
   </div>
 );
-interface SidebarProps {
-  collapsed: boolean;
-  activeView: string;
-  onNavigate: (view: string) => void;
-}
-export const Sidebar = ({ activeView, onNavigate }: SidebarProps) => {
-  const [collapsed, setcollapsed] = useState(false);
-  const togglesidebar = () => {
-    setcollapsed(!collapsed);
-  };
+
+export const Sidebar = ({ activeView, onNavigate, collapsed, onToggle }: SidebarProps) => {
   return (
     <div
-      className={`w-64 h-full bg-white border-r border-gray-200 flex flex-col shrink-0 ${collapsed ? "collapsed" : ""}`}
+      className={`h-full bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all duration-300 ${collapsed ? "w-20" : "w-64"}`}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b border-gray-100 cursor-pointer">
-        <div className="flex  items-center gap-18 text-blue-600">
-          <span
-            className="flex  gap-2 items-center  font-bold text-lg text-gray-900 tracking-tight"
-            onClick={() => onNavigate("dashboard")}
-          >
-            <Hexagon size={24} strokeWidth={2.5} className="text-blue-600" />
-            {!collapsed && "FlowBuild"}
-          </span>
-          <button className="text-2xl cursor-pointer" onClick={togglesidebar}>
-            {collapsed ? "➡" : "☰"}
-          </button>
+      <div className={`h-16 flex items-center px-6 border-b border-gray-100 cursor-pointer ${collapsed ? "justify-center" : "justify-between"}`}>
+        <div
+          className="flex items-center gap-2 text-gray-900 font-bold text-lg tracking-tight overflow-hidden"
+          onClick={() => onNavigate("dashboard")}
+        >
+          <Hexagon size={24} strokeWidth={2.5} className="text-blue-600 shrink-0" />
+          {!collapsed && <span className="truncate">FlowBuild</span>}
         </div>
+
+        {/* Toggle button - hidden on mobile (handled by App.tsx header) */}
+        <button
+          className="hidden md:flex p-1 hover:bg-gray-100 rounded-md text-gray-400 transition-colors"
+          onClick={onToggle}
+        >
+          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
-        <SectionLabel label={!collapsed ? "Platform" : ""} />
+        <SectionLabel label="Platform" collapsed={collapsed} />
 
         <SidebarItem
           icon={LayoutDashboard}
-          label={!collapsed ? "Dashboard" : undefined}
+          label="Dashboard"
           viewId="dashboard"
           active={activeView === "dashboard"}
           collapsed={collapsed}
@@ -130,7 +121,7 @@ export const Sidebar = ({ activeView, onNavigate }: SidebarProps) => {
           onClick={() => onNavigate("scheduler")}
         />
 
-        <SectionLabel label={!collapsed ? "Operations" : ""} />
+        <SectionLabel label="Operations" collapsed={collapsed} />
 
         <SidebarItem
           icon={BarChart2}
@@ -168,7 +159,7 @@ export const Sidebar = ({ activeView, onNavigate }: SidebarProps) => {
           onClick={() => onNavigate("workflows")}
         />
 
-        <SectionLabel label={!collapsed ? "System" : ""} />
+        <SectionLabel label="System" collapsed={collapsed} />
 
         <SidebarItem
           icon={Settings}
@@ -192,20 +183,18 @@ export const Sidebar = ({ activeView, onNavigate }: SidebarProps) => {
       {/* User Profile / Bottom Footer */}
       <div className="p-4 border-t border-gray-200">
         <div
-          className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+          className={`flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${collapsed ? "justify-center" : ""}`}
           onClick={() => onNavigate("settings")}
         >
-          <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs shadow-sm">
+          <div className="w-8 h-8 rounded-full bg-linear-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-xs shadow-sm shrink-0">
             JD
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {!collapsed && "Jane Doe"}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {!collapsed && "jane@company.com"}
-            </p>
-          </div>
+          {!collapsed && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900 truncate">Jane Doe</p>
+              <p className="text-xs text-gray-500 truncate">jane@company.com</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
