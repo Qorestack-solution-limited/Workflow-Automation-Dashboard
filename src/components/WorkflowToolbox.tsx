@@ -18,6 +18,9 @@ import {
   Calculator,
   Calendar,
   UserPlus,
+  ShoppingBag,
+  MousePointerClick,
+  FolderInput,
 } from "lucide-react";
 
 const ToolboxItem = ({ label, icon: Icon, color, iconName }: any) => {
@@ -101,6 +104,9 @@ export const WorkflowToolbox = ({ mode = 'workflow' }: { mode?: 'workflow' | 'mo
             <ToolboxItem label="Webhook" icon={Globe} color="text-purple-600" />
             <ToolboxItem label="Schedule" icon={Clock} color="text-blue-600" />
             <ToolboxItem label="Form Submit" icon={Zap} color="text-orange-600" />
+            <ToolboxItem label="Manual Trigger" icon={MousePointerClick} color="text-emerald-500" />
+            <ToolboxItem label="Incoming SFTP" icon={FolderInput} color="text-indigo-600" />
+            <ToolboxItem label="Shopify Webhook" icon={ShoppingBag} color="text-green-600" />
           </>
         )}
 

@@ -198,6 +198,11 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
       case 'Shopify Webhook':
         return (
           <div className="space-y-4">
+            {step.type === 'Shopify Webhook' && (
+              <div className="p-3 bg-green-50 border border-green-100 rounded text-[10px] text-green-700 mb-2">
+                Listen for Shopify events like orders, checkouts, and fulfillment changes.
+              </div>
+            )}
             <div className="space-y-2">
               <Label className="text-xs font-bold text-gray-700">Webhook URL</Label>
               <div className="flex flex-col sm:flex-row gap-2">
@@ -205,12 +210,19 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                 <Button variant="outline" size="sm">Copy</Button>
               </div>
             </div>
+            {step.type === 'Shopify Webhook' && (
+               <div className="space-y-2">
+                 <Label className="text-xs font-bold text-gray-700">Shared Secret</Label>
+                 <Input type="password" placeholder="••••••••••••" className="h-10 bg-white" />
+               </div>
+            )}
             <div className="space-y-2">
               <Label className="text-xs font-bold text-gray-700">Authentication</Label>
               <select className="w-full h-10 px-3 bg-white border border-gray-200 rounded text-sm">
                 <option>None</option>
                 <option>API Key</option>
                 <option>Bearer Token</option>
+                {step.type === 'Shopify Webhook' && <option>HMAC (X-Shopify-Hmac-Sha256)</option>}
               </select>
             </div>
           </div>
@@ -294,6 +306,24 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
       default:
         return <div className="text-sm text-gray-500 italic">No specific configuration for this trigger.</div>;
     }
+  };
+
+  const renderConfigContainer = () => {
+    return (
+      <div className="space-y-6">
+        {isTrigger ? renderTriggerConfig() : (isLogic ? renderLogicConfig() : renderTransformerConfig())}
+
+        {isTrigger && (
+          <div className="pt-6 border-t border-gray-100 flex justify-end gap-2">
+            <Button variant="outline" size="sm" className="text-xs">Reset Configuration</Button>
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-2">
+              <Play size={14} fill="currentColor" />
+              Test Trigger
+            </Button>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const renderTransformerConfig = () => {
@@ -424,8 +454,8 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
 
         {/* Step Body (Config) */}
         {isOpen && (
-          <div className="p-4 sm:p-6 space-y-6 bg-white border-b border-gray-100">
-            {isTrigger ? renderTriggerConfig() : (isLogic ? renderLogicConfig() : renderTransformerConfig())}
+          <div className="p-4 sm:p-6 bg-white border-b border-gray-100">
+            {renderConfigContainer()}
           </div>
         )}
 
