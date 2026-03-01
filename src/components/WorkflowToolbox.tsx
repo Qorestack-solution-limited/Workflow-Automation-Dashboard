@@ -71,7 +71,7 @@ const CategoryLabel = ({ label }: { label: string }) => (
   </div>
 );
 
-export const WorkflowToolbox = () => {
+export const WorkflowToolbox = ({ mode = 'workflow' }: { mode?: 'workflow' | 'module' }) => {
   return (
     <div className="w-full h-full bg-white flex flex-col shrink-0 overflow-hidden">
       <div className="p-4 border-b border-gray-100">
@@ -95,16 +95,27 @@ export const WorkflowToolbox = () => {
         <ToolboxItem label="Condition" icon={GitBranch} color="text-amber-600" />
         <ToolboxItem label="Loop" icon={Repeat} color="text-cyan-600" />
 
-        <CategoryLabel label="Triggers" />
-        <ToolboxItem label="Webhook" icon={Globe} color="text-purple-600" />
-        <ToolboxItem label="Schedule" icon={Clock} color="text-blue-600" />
-        <ToolboxItem label="Form Submit" icon={Zap} color="text-orange-600" />
+        {mode === 'workflow' && (
+          <>
+            <CategoryLabel label="Triggers" />
+            <ToolboxItem label="Webhook" icon={Globe} color="text-purple-600" />
+            <ToolboxItem label="Schedule" icon={Clock} color="text-blue-600" />
+            <ToolboxItem label="Form Submit" icon={Zap} color="text-orange-600" />
+          </>
+        )}
 
         <CategoryLabel label="Transformers" />
         <ToolboxItem label="Set Value" icon={FileText} color="text-indigo-600" />
         <ToolboxItem label="Data Mapper" icon={ArrowRightLeft} color="text-green-600" />
         <ToolboxItem label="Filter" icon={Filter} color="text-red-600" />
         <ToolboxItem label="JS Code" icon={Code} color="text-yellow-600" />
+
+        {mode === 'workflow' && (
+          <>
+            <CategoryLabel label="Modules" />
+            <ToolboxItem label="Call Module" icon={GitBranch} color="text-blue-600" />
+          </>
+        )}
 
         <CategoryLabel label="Integrations" />
         <ToolboxItem label="Database" icon={Database} color="text-blue-500" />

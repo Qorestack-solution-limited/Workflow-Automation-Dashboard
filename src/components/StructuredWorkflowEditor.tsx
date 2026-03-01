@@ -30,7 +30,7 @@ type StepType =
   | 'Webhook' | 'Schedule' | 'Form Submit' | 'Manual Trigger' | 'Incoming SFTP' | 'Shopify Webhook'
   | 'HTTP Lookup' | 'Filter' | 'JS Code' | 'Database Query' | 'Send Email' | 'Slack Message' | 'OpenAI Prompt'
   | 'Math: Calculate' | 'Date: Format' | 'Date: Add/Subtract' | 'Enrichment: Customer' | 'Enrichment: Product'
-  | 'String: Case' | 'String: Join' | 'Number: Format';
+  | 'String: Case' | 'String: Join' | 'Number: Format' | 'Call Module';
 
 interface Step {
   id: string;
@@ -299,6 +299,23 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
   const renderTransformerConfig = () => {
     const specializedConfig = () => {
       switch (step.type) {
+        case 'Call Module':
+          return (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Select Module <span className="text-red-500">*</span></Label>
+                <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                  <option>Select a logic module...</option>
+                  <option>Standard Order Enrichment</option>
+                  <option>Customer Data Cleansing</option>
+                  <option>VAT Calculation Engine</option>
+                </select>
+              </div>
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded text-[10px] text-blue-700 leading-relaxed">
+                Modules allow you to reuse complex transformation logic across multiple workflows.
+              </div>
+            </div>
+          );
         case 'String: Cut':
           return (
             <div className="grid grid-cols-2 gap-4">
@@ -467,7 +484,7 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
   );
 };
 
-export const StructuredWorkflowEditor = () => {
+export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workflow' | 'module' }) => {
   const [isTesterCollapsed, setIsTesterCollapsed] = useState(true);
   const [isToolboxCollapsed, setIsToolboxCollapsed] = useState(false);
   const [workflowName, setWorkflowName] = useState("");
@@ -635,7 +652,7 @@ export const StructuredWorkflowEditor = () => {
         ${isToolboxCollapsed ? 'w-0 overflow-hidden' : 'w-64 fixed lg:relative top-0 bottom-0'}
       `}>
         <div className="md:hidden h-16" /> {/* Spacer for mobile header */}
-        <WorkflowToolbox />
+        <WorkflowToolbox mode={mode} />
       </div>
 
       <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
@@ -658,20 +675,22 @@ export const StructuredWorkflowEditor = () => {
         {/* Editor Canvas */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-8" onDragOver={(e) => e.preventDefault()} onDrop={onDrop}>
           <div className="max-w-4xl mx-auto space-y-12">
-            <section className="space-y-4">
-              <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2"><Zap size={14} className="text-amber-500" /> Triggers</h2>
-              <div className="pl-4 border-l-2 border-amber-400 space-y-4">
-                {triggers.map((t, idx) => (
-                  <TransformerStepCard
-                    key={t.id}
-                    step={t}
-                    onUpdate={handleUpdateStep}
-                    onDelete={handleDelete}
-                    index={idx}
-                  />
-                ))}
-              </div>
-            </section>
+            {mode === 'workflow' && (
+              <section className="space-y-4">
+                <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2"><Zap size={14} className="text-amber-500" /> Triggers</h2>
+                <div className="pl-4 border-l-2 border-amber-400 space-y-4">
+                  {triggers.map((t, idx) => (
+                    <TransformerStepCard
+                      key={t.id}
+                      step={t}
+                      onUpdate={handleUpdateStep}
+                      onDelete={handleDelete}
+                      index={idx}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
 
             <section className="space-y-4">
               <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Transformers</h2>
