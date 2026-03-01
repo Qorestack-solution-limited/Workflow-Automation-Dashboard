@@ -12,6 +12,7 @@ import { SchedulerView } from "./components/views/SchedulerView";
 import { RepositoryView } from "./components/views/RepositoryView";
 import { SettingsView } from "./components/views/SettingsView";
 import { HelpView } from "./components/views/HelpView";
+import { ModulesView } from "./components/views/ModulesView";
 
 const App = () => {
   const [activeView, setActiveView] = useState("dashboard");
@@ -29,7 +30,7 @@ const App = () => {
   const handleNavigate = (view: string) => {
     setActiveView(view);
     setIsMobileMenuOpen(false); // Close mobile menu on navigation
-    if (view === "workflows") {
+    if (["workflows", "modules", "module-editor"].includes(view)) {
       setIsSidebarCollapsed(true);
     }
   };
@@ -52,9 +53,13 @@ const App = () => {
         return <SettingsView />;
       case "help":
         return <HelpView />;
+      case "modules":
+        return <ModulesView onEditModule={(name) => setActiveView("module-editor")} />;
+      case "module-editor":
+        return <StructuredWorkflowEditor mode="module" key="module-editor" />;
       case "workflows":
       default:
-        return <StructuredWorkflowEditor />;
+        return <StructuredWorkflowEditor mode="workflow" />;
     }
   };
 

@@ -39,8 +39,10 @@ const SidebarItem = ({
 }) => (
   <button
     onClick={onClick}
+    aria-label={label}
+    title={label}
     className={`w-full flex items-center px-3 py-2 rounded-lg cursor-pointer transition-all duration-200 ${
-      active ? "bg-blue-100 text-blue-600" : "text-gray-600 hover:bg-gray-100"
+      active ? "bg-blue-100 text-blue-600" : "text-gray-400 hover:bg-gray-100"
     } ${collapsed ? "justify-center" : "gap-3"}`}
   >
     <Icon
@@ -157,6 +159,15 @@ export const Sidebar = ({ activeView, onNavigate, collapsed, onToggle }: Sidebar
           active={activeView === "workflows"}
           collapsed={collapsed}
           onClick={() => onNavigate("workflows")}
+        />
+
+        <SidebarItem
+          icon={Layers}
+          label="Logic Modules"
+          viewId="modules"
+          active={activeView === "modules" || activeView === "module-editor"}
+          collapsed={collapsed}
+          onClick={() => onNavigate("modules")}
         />
 
         <SectionLabel label="System" collapsed={collapsed} />
