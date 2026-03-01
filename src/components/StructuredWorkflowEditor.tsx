@@ -3,6 +3,7 @@ import {
   Plus,
   GripVertical,
   ChevronRight,
+  ChevronLeft,
   MoreHorizontal,
   Settings2,
   BookOpen,
@@ -25,7 +26,8 @@ import {
   Type,
   Calculator,
   Calendar,
-  UserPlus
+  UserPlus,
+  FlaskConical
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -853,6 +855,15 @@ export const StructuredWorkflowEditor = () => {
            <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><BookOpen size={14} /></button>
 
            <div className="ml-auto flex items-center gap-3">
+              <Button
+                variant={isTesterCollapsed ? "outline" : "secondary"}
+                className={`gap-2 ${!isTesterCollapsed ? 'bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100' : ''}`}
+                onClick={() => setIsTesterCollapsed(!isTesterCollapsed)}
+                data-testid="toggle-tester-btn"
+              >
+                <FlaskConical size={16} />
+                Test
+              </Button>
               <div className="flex items-center gap-1.5 px-3 py-1.5 border border-gray-200 rounded-md bg-white">
                 <Play size={14} className="text-green-600 fill-green-600" />
                 <span className="font-semibold text-gray-700">Saved</span>
@@ -937,15 +948,21 @@ export const StructuredWorkflowEditor = () => {
         </div>
       </div>
 
-      <div className={`transition-all duration-300 ease-in-out flex h-full ${isTesterCollapsed ? 'w-0' : 'w-[450px]'}`}>
-        {!isTesterCollapsed && <TransformerTester />}
+      <div className="relative flex h-full shrink-0 z-10">
+        <div
+          className={`transition-all duration-300 ease-in-out flex h-full overflow-hidden ${isTesterCollapsed ? 'w-0 border-l-0' : 'w-[450px] border-l border-gray-200'}`}
+          data-testid="tester-panel-container"
+        >
+          <TransformerTester />
+        </div>
 
         <button
           onClick={() => setIsTesterCollapsed(!isTesterCollapsed)}
-          className={`absolute top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-full p-1 shadow-md hover:bg-gray-50 transition-all z-50 ${isTesterCollapsed ? 'right-4' : 'right-[435px]'}`}
+          className="absolute top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-full p-1 shadow-md hover:bg-gray-50 transition-all z-50 -left-4"
           title={isTesterCollapsed ? "Open Tester" : "Close Tester"}
+          data-testid="side-toggle-btn"
         >
-          {isTesterCollapsed ? <ChevronRight size={16} className="rotate-180" /> : <ChevronRight size={16} />}
+          {isTesterCollapsed ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
         </button>
       </div>
     </div>
