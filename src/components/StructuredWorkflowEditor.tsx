@@ -21,7 +21,11 @@ import {
   Mail,
   Slack,
   MessageSquare,
-  FileText
+  FileText,
+  Type,
+  Calculator,
+  Calendar,
+  UserPlus
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -31,9 +35,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from './ui/tabs';
 
 // Mock types for transformers and triggers
 type StepType =
-  | 'Value mapper' | 'String: Cut' | 'Condition' | 'Loop' | 'Data Mapper' | 'Set Value'
+  | 'Value mapper' | 'String: Cut' | 'String: Replace' | 'Condition' | 'Loop' | 'Data Mapper' | 'Set Value'
   | 'Webhook' | 'Schedule' | 'Form Submit' | 'Manual Trigger' | 'Incoming SFTP' | 'Shopify Webhook'
-  | 'HTTP Lookup' | 'Filter' | 'JS Code' | 'Database Query' | 'Send Email' | 'Slack Message' | 'OpenAI Prompt';
+  | 'HTTP Lookup' | 'Filter' | 'JS Code' | 'Database Query' | 'Send Email' | 'Slack Message' | 'OpenAI Prompt'
+  | 'Math: Calculate' | 'Date: Format' | 'Date: Add/Subtract' | 'Enrichment: Customer' | 'Enrichment: Product'
+  | 'String: Case' | 'String: Join' | 'Number: Format';
 
 interface Step {
   id: string;
@@ -43,6 +49,30 @@ interface Step {
   children?: Step[];
   branch?: 'true' | 'false';
 }
+
+const StepConnector = ({ isLast, colorClass, top = 24 }: { isLast?: boolean, colorClass: string, top?: number }) => (
+  <div className="absolute -left-4 top-0 bottom-0 w-4 pointer-events-none">
+    {/* Vertical line */}
+    <div
+      className={`absolute left-0 top-0 border-l-2 ${colorClass}`}
+      style={{
+        height: isLast ? `${top}px` : 'calc(100% + 16px)'
+      }}
+    />
+    {/* Horizontal line */}
+    <div
+      className={`absolute left-0 border-t-2 ${colorClass}`}
+      style={{ top: `${top}px`, width: '16px' }}
+    />
+  </div>
+);
+
+const TreeItem = ({ children, isLast, colorClass, top = 24 }: { children: React.ReactNode, isLast?: boolean, colorClass: string, top?: number }) => (
+  <div className="relative">
+    <StepConnector isLast={isLast} colorClass={colorClass} top={top} />
+    {children}
+  </div>
+);
 
 const TransformerTester = () => (
   <div className="w-[450px] h-full bg-white border-l border-gray-200 flex flex-col">
@@ -97,6 +127,10 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
   const isLogic = step.type === 'Condition' || step.type === 'Loop';
   const isTrigger = ['Webhook', 'Schedule', 'Form Submit', 'Manual Trigger', 'Incoming SFTP', 'Shopify Webhook'].includes(step.type);
 
+  const trueBranchSteps = step.children?.filter(c => c.branch === 'true') || [];
+  const falseBranchSteps = step.children?.filter(c => c.branch === 'false') || [];
+  const loopSteps = step.children || [];
+
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -108,8 +142,50 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
     e.stopPropagation();
     const type = e.dataTransfer.getData('application/label') as StepType;
     if (type && onDropOnBranch) {
-      onDropOnBranch(step.id, type, branch);
+      onDropOnBranch(step.id, branch, type);
     }
+  };
+
+  const renderLogicConfig = () => {
+    if (step.type === 'Condition') {
+      return (
+        <div className="space-y-4">
+          <div className="flex gap-4 items-end">
+            <div className="flex-1 space-y-1.5">
+              <Label className="text-xs font-bold text-gray-700">Property</Label>
+              <Input placeholder="order.status" className="h-9 text-xs bg-white" />
+            </div>
+            <div className="w-32 space-y-1.5">
+              <Label className="text-xs font-bold text-gray-700">Operator</Label>
+              <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                <option value="equals">equals</option>
+                <option value="not_equals">not equals</option>
+                <option value="contains">contains</option>
+                <option value="exists">exists</option>
+                <option value="greater_than">greater than</option>
+                <option value="less_than">less than</option>
+              </select>
+            </div>
+            <div className="flex-1 space-y-1.5">
+              <Label className="text-xs font-bold text-gray-700">Value</Label>
+              <Input placeholder="paid" className="h-9 text-xs bg-white" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+    if (step.type === 'Loop') {
+      return (
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs font-bold text-gray-700">Array Path <span className="text-red-500">*</span></Label>
+            <Input placeholder="order.line_items" className="h-9 text-xs bg-white" />
+            <p className="text-[10px] text-gray-500">Specify the path to the array you want to iterate over.</p>
+          </div>
+        </div>
+      );
+    }
+    return null;
   };
 
   const renderTriggerConfig = () => {
@@ -153,9 +229,62 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
         );
       case 'Form Submit':
         return (
-          <div className="space-y-2">
-            <Label className="text-xs font-bold text-gray-700">Form ID</Label>
-            <Input placeholder="Enter Form ID..." className="h-10 bg-white" />
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-gray-700">Form ID</Label>
+              <Input placeholder="Enter Form ID..." className="h-10 bg-white" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-gray-700">Fields to Capture</Label>
+              <div className="space-y-2">
+                {['email', 'full_name', 'message'].map(field => (
+                  <label key={field} className="flex items-center gap-2 text-sm">
+                    <input type="checkbox" defaultChecked /> {field}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      case 'Manual Trigger':
+        return (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-gray-700">Parameters</Label>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input placeholder="Param Name" className="h-9 text-xs" defaultValue="user_id" />
+                  <Input placeholder="Default Value" className="h-9 text-xs" />
+                </div>
+                <Button variant="outline" size="sm" className="w-full text-xs h-8">Add Parameter</Button>
+              </div>
+            </div>
+          </div>
+        );
+      case 'Incoming SFTP':
+        return (
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Host</Label>
+                <Input placeholder="sftp.example.com" className="h-9 text-xs" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Port</Label>
+                <Input defaultValue="22" className="h-9 text-xs" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-gray-700">Directory Path</Label>
+              <Input placeholder="/uploads/orders" className="h-9 text-xs" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-bold text-gray-700">Credentials</Label>
+              <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                <option>Select saved credential...</option>
+                <option>Production SFTP Key</option>
+              </select>
+            </div>
           </div>
         );
       default:
@@ -164,8 +293,197 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
   };
 
   const renderTransformerConfig = () => {
+    const specializedConfig = () => {
+      switch (step.type) {
+        case 'String: Cut':
+          return (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Start Index</Label>
+                <Input type="number" defaultValue="0" className="h-9 text-xs bg-white" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Length</Label>
+                <Input type="number" placeholder="End of string" className="h-9 text-xs bg-white" />
+              </div>
+            </div>
+          );
+        case 'Date: Add/Subtract':
+          return (
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold text-gray-700">Amount</Label>
+                  <Input type="number" defaultValue="1" className="h-9 text-xs bg-white" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold text-gray-700">Unit</Label>
+                  <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                    <option value="days">Days</option>
+                    <option value="months">Months</option>
+                    <option value="years">Years</option>
+                    <option value="hours">Hours</option>
+                  </select>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Operation</Label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2 text-xs">
+                    <input type="radio" name="date_op" value="add" defaultChecked /> Add
+                  </label>
+                  <label className="flex items-center gap-2 text-xs">
+                    <input type="radio" name="date_op" value="subtract" /> Subtract
+                  </label>
+                </div>
+              </div>
+            </div>
+          );
+        case 'String: Replace':
+          return (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Search for</Label>
+                <Input placeholder="Text to find" className="h-9 text-xs bg-white" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Replace with</Label>
+                <Input placeholder="New text" className="h-9 text-xs bg-white" />
+              </div>
+            </div>
+          );
+        case 'Enrichment: Product':
+          return (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Product SKU / ID</Label>
+                <Input placeholder="line_item.sku" className="h-9 text-xs bg-white" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Data Source</Label>
+                <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                  <option value="inventory">Inventory System</option>
+                  <option value="pim">PIM</option>
+                  <option value="shopify">Shopify Storefront</option>
+                </select>
+              </div>
+            </div>
+          );
+        case 'Math: Calculate':
+          return (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Operation</Label>
+                <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                  <option value="add">Add</option>
+                  <option value="subtract">Subtract</option>
+                  <option value="multiply">Multiply</option>
+                  <option value="divide">Divide</option>
+                  <option value="round">Round</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Value to use</Label>
+                <Input placeholder="Constant or field path" className="h-9 text-xs bg-white" />
+              </div>
+            </div>
+          );
+        case 'Number: Format':
+          return (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Format Style</Label>
+                <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                  <option value="currency">Currency</option>
+                  <option value="decimal">Decimal</option>
+                  <option value="percent">Percent</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Currency Code</Label>
+                <Input defaultValue="USD" className="h-9 text-xs bg-white" />
+              </div>
+            </div>
+          );
+        case 'Date: Format':
+          return (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Input Format</Label>
+                <Input placeholder="ISO-8601" className="h-9 text-xs bg-white" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Output Format</Label>
+                <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                  <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                  <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                  <option value="MMMM Do YYYY">MMMM Do YYYY</option>
+                  <option value="timestamp">Unix Timestamp</option>
+                </select>
+              </div>
+            </div>
+          );
+        case 'String: Case':
+          return (
+            <div className="space-y-1.5">
+              <Label className="text-xs font-bold text-gray-700">Transform to</Label>
+              <select className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                <option value="uppercase">UPPERCASE</option>
+                <option value="lowercase">lowercase</option>
+                <option value="capitalize">Capitalize</option>
+                <option value="snake_case">snake_case</option>
+                <option value="camelCase">camelCase</option>
+              </select>
+            </div>
+          );
+        case 'String: Join':
+          return (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Separator</Label>
+                <Input defaultValue=", " className="h-9 text-xs bg-white" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Array Path</Label>
+                <Input placeholder="items.tags" className="h-9 text-xs bg-white" />
+              </div>
+            </div>
+          );
+        case 'Enrichment: Customer':
+          return (
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Customer ID / Email</Label>
+                <Input placeholder="customer.id" className="h-9 text-xs bg-white" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold text-gray-700">Fields to Fetch</Label>
+                <div className="flex flex-wrap gap-2">
+                  <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Orders</span>
+                  <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Loyalty</span>
+                  <span className="px-2 py-1 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Segments</span>
+                </div>
+              </div>
+            </div>
+          );
+        default:
+          return null;
+      }
+    };
+
+    const configContent = specializedConfig();
+
     return (
       <>
+        {configContent && (
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Settings2 size={14} className="text-gray-400" />
+              <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Step Specific Configuration</span>
+            </div>
+            {configContent}
+          </div>
+        )}
         <div className="space-y-2">
           <Label className="text-xs font-bold text-gray-700 flex items-center gap-1">
             Accessor <span className="text-red-500">*</span>
@@ -201,6 +519,53 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
 
           <Button variant="ghost" className="text-blue-600 hover:text-blue-700 p-0 h-auto text-sm font-medium">
             <Plus size={14} className="mr-2" /> Add keys
+          </Button>
+        </div>
+
+        <div className="space-y-4 pt-4 border-t border-gray-100">
+          <div className="flex justify-between items-center">
+            <Label className="text-xs font-bold text-gray-700 uppercase tracking-wider">Field Mappings</Label>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400"><MoreHorizontal size={16} /></Button>
+          </div>
+
+          <div className="space-y-3">
+            <div className="grid grid-cols-12 gap-2 items-center">
+              <div className="col-span-4"><Label className="text-[10px] uppercase text-gray-500 font-bold">Source Field</Label></div>
+              <div className="col-span-4"><Label className="text-[10px] uppercase text-gray-500 font-bold">Target Field</Label></div>
+              <div className="col-span-3"><Label className="text-[10px] uppercase text-gray-500 font-bold">Data Type</Label></div>
+              <div className="col-span-1"></div>
+            </div>
+
+            {[
+              { source: 'customer.email', target: 'Email', type: 'String' },
+              { source: 'order.total_price', target: 'Amount', type: 'Number' }
+            ].map((mapping, idx) => (
+              <div key={idx} className="grid grid-cols-12 gap-2 items-center group/mapping">
+                <div className="col-span-4">
+                  <Input defaultValue={mapping.source} className="h-9 text-xs bg-white" />
+                </div>
+                <div className="col-span-4">
+                  <Input defaultValue={mapping.target} className="h-9 text-xs bg-white" />
+                </div>
+                <div className="col-span-3">
+                  <select defaultValue={mapping.type} className="w-full h-9 px-2 bg-white border border-gray-200 rounded text-xs">
+                    <option value="String">String</option>
+                    <option value="Number">Number</option>
+                    <option value="Boolean">Boolean</option>
+                    <option value="Date">Date</option>
+                    <option value="Object">Object</option>
+                    <option value="Array">Array</option>
+                  </select>
+                </div>
+                <div className="col-span-1 flex justify-end">
+                   <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-500"><X size={14} /></Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <Button variant="ghost" className="text-blue-600 hover:text-blue-700 p-0 h-auto text-sm font-medium">
+             <Plus size={14} className="mr-2" /> Add field mapping
           </Button>
         </div>
 
@@ -263,9 +628,9 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
         </div>
 
         {/* Step Body (Config) */}
-        {isOpen && !isLogic && (
-          <div className="p-6 space-y-6 bg-white">
-            {isTrigger ? renderTriggerConfig() : renderTransformerConfig()}
+        {isOpen && (
+          <div className="p-6 space-y-6 bg-white border-b border-gray-100">
+            {isTrigger ? renderTriggerConfig() : (isLogic ? renderLogicConfig() : renderTransformerConfig())}
           </div>
         )}
 
@@ -277,26 +642,31 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded">True branch</span>
                </div>
                <div
-                  className="pl-4 border-l-2 border-emerald-200 min-h-[50px] space-y-4"
+                  className="pl-6 min-h-[50px] space-y-4 relative"
                   onDragOver={onDragOver}
                   onDrop={(e) => handleDrop(e, 'true')}
                 >
-                 {step.children?.filter(c => c.branch === 'true').map(child => (
-                   <TransformerStepCard
-                    key={child.id}
-                    step={child}
-                    onUpdate={() => {}}
-                    onDelete={onDelete}
-                    onAddNested={onAddNested}
-                    onDropOnBranch={onDropOnBranch}
-                   />
+                 {trueBranchSteps.map((child, idx) => (
+                   <TreeItem key={child.id} colorClass="border-emerald-200">
+                     <TransformerStepCard
+                      step={child}
+                      onUpdate={() => {}}
+                      onDelete={onDelete}
+                      onAddNested={onAddNested}
+                      onDropOnBranch={onDropOnBranch}
+                     />
+                   </TreeItem>
                  ))}
-                 <div className="py-2 text-center border border-dashed border-emerald-100 rounded-md bg-emerald-50/30 text-emerald-400 text-xs">
-                    Drop items here
+                 <TreeItem isLast={true} colorClass="border-emerald-200" top={16}>
+                   <div className="py-2 text-center border border-dashed border-emerald-100 rounded-md bg-emerald-50/30 text-emerald-400 text-xs">
+                      Drop items here
+                   </div>
+                 </TreeItem>
+                 <div className="pl-0">
+                  <Button variant="ghost" className="text-emerald-600 hover:text-emerald-700 p-0 h-auto text-xs font-medium" onClick={() => onAddNested(step.id, 'true')}>
+                    <Plus size={14} className="mr-2" /> Add transformer to True branch
+                  </Button>
                  </div>
-                 <Button variant="ghost" className="text-emerald-600 hover:text-emerald-700 p-0 h-auto text-xs font-medium" onClick={() => onAddNested(step.id, 'true')}>
-                   <Plus size={14} className="mr-2" /> Add transformer to True branch
-                 </Button>
                </div>
             </div>
 
@@ -305,26 +675,31 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                  <span className="text-[10px] font-bold text-red-600 uppercase tracking-widest bg-red-50 px-2 py-0.5 rounded">False branch</span>
                </div>
                <div
-                  className="pl-4 border-l-2 border-red-200 min-h-[50px] space-y-4"
+                  className="pl-6 min-h-[50px] space-y-4 relative"
                   onDragOver={onDragOver}
                   onDrop={(e) => handleDrop(e, 'false')}
                >
-                 {step.children?.filter(c => c.branch === 'false').map(child => (
-                   <TransformerStepCard
-                    key={child.id}
-                    step={child}
-                    onUpdate={() => {}}
-                    onDelete={onDelete}
-                    onAddNested={onAddNested}
-                    onDropOnBranch={onDropOnBranch}
-                   />
+                 {falseBranchSteps.map((child, idx) => (
+                   <TreeItem key={child.id} colorClass="border-red-200">
+                     <TransformerStepCard
+                      step={child}
+                      onUpdate={() => {}}
+                      onDelete={onDelete}
+                      onAddNested={onAddNested}
+                      onDropOnBranch={onDropOnBranch}
+                     />
+                   </TreeItem>
                  ))}
-                 <div className="py-2 text-center border border-dashed border-red-100 rounded-md bg-red-50/30 text-red-400 text-xs">
-                    Drop items here
+                 <TreeItem isLast={true} colorClass="border-red-200" top={16}>
+                   <div className="py-2 text-center border border-dashed border-red-100 rounded-md bg-red-50/30 text-red-400 text-xs">
+                      Drop items here
+                   </div>
+                 </TreeItem>
+                 <div className="pl-0">
+                  <Button variant="ghost" className="text-red-600 hover:text-red-700 p-0 h-auto text-xs font-medium" onClick={() => onAddNested(step.id, 'false')}>
+                    <Plus size={14} className="mr-2" /> Add transformer to False branch
+                  </Button>
                  </div>
-                 <Button variant="ghost" className="text-red-600 hover:text-red-700 p-0 h-auto text-xs font-medium" onClick={() => onAddNested(step.id, 'false')}>
-                   <Plus size={14} className="mr-2" /> Add transformer to False branch
-                 </Button>
                </div>
             </div>
           </div>
@@ -336,26 +711,31 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                  <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-blue-50 px-2 py-0.5 rounded">Loop body</span>
                </div>
                <div
-                  className="pl-4 border-l-2 border-blue-200 min-h-[50px] space-y-4"
+                  className="pl-6 min-h-[50px] space-y-4 relative"
                   onDragOver={onDragOver}
                   onDrop={(e) => handleDrop(e)}
                >
-                 {step.children?.map(child => (
-                   <TransformerStepCard
-                    key={child.id}
-                    step={child}
-                    onUpdate={() => {}}
-                    onDelete={onDelete}
-                    onAddNested={onAddNested}
-                    onDropOnBranch={onDropOnBranch}
-                   />
+                 {loopSteps.map((child, idx) => (
+                   <TreeItem key={child.id} colorClass="border-blue-200">
+                     <TransformerStepCard
+                      step={child}
+                      onUpdate={() => {}}
+                      onDelete={onDelete}
+                      onAddNested={onAddNested}
+                      onDropOnBranch={onDropOnBranch}
+                     />
+                   </TreeItem>
                  ))}
-                 <div className="py-2 text-center border border-dashed border-blue-100 rounded-md bg-blue-50/30 text-blue-400 text-xs">
-                    Drop items here
+                 <TreeItem isLast={true} colorClass="border-blue-200" top={16}>
+                   <div className="py-2 text-center border border-dashed border-blue-100 rounded-md bg-blue-50/30 text-blue-400 text-xs">
+                      Drop items here
+                   </div>
+                 </TreeItem>
+                 <div className="pl-0">
+                  <Button variant="ghost" className="text-blue-600 hover:text-blue-700 p-0 h-auto text-xs font-medium" onClick={() => onAddNested(step.id)}>
+                    <Plus size={14} className="mr-2" /> Add transformer to Loop body
+                  </Button>
                  </div>
-                 <Button variant="ghost" className="text-blue-600 hover:text-blue-700 p-0 h-auto text-xs font-medium" onClick={() => onAddNested(step.id)}>
-                   <Plus size={14} className="mr-2" /> Add transformer to Loop body
-                 </Button>
                </div>
            </div>
         )}
@@ -365,6 +745,7 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
 };
 
 export const StructuredWorkflowEditor = () => {
+  const [isTesterCollapsed, setIsTesterCollapsed] = useState(false);
   const [triggers, setTriggers] = useState<Step[]>([
     { id: 't1', type: 'Shopify Webhook', label: 'Shopify Order Trigger', config: {} }
   ]);
@@ -378,6 +759,13 @@ export const StructuredWorkflowEditor = () => {
       children: [
         { id: '3', type: 'Set Value', label: 'Set priority', config: {}, branch: 'true' }
       ]
+    },
+    {
+      id: '4',
+      type: 'Loop',
+      label: 'Iterate items',
+      config: {},
+      children: []
     }
   ]);
 
@@ -447,7 +835,7 @@ export const StructuredWorkflowEditor = () => {
   }, []);
 
   return (
-    <div className="flex h-full w-full bg-gray-50 overflow-hidden">
+    <div className="flex h-full w-full bg-gray-50 overflow-hidden relative">
       <WorkflowToolbox />
 
       <div
@@ -549,7 +937,17 @@ export const StructuredWorkflowEditor = () => {
         </div>
       </div>
 
-      <TransformerTester />
+      <div className={`transition-all duration-300 ease-in-out flex h-full ${isTesterCollapsed ? 'w-0' : 'w-[450px]'}`}>
+        {!isTesterCollapsed && <TransformerTester />}
+
+        <button
+          onClick={() => setIsTesterCollapsed(!isTesterCollapsed)}
+          className={`absolute top-1/2 -translate-y-1/2 bg-white border border-gray-200 rounded-full p-1 shadow-md hover:bg-gray-50 transition-all z-50 ${isTesterCollapsed ? 'right-4' : 'right-[435px]'}`}
+          title={isTesterCollapsed ? "Open Tester" : "Close Tester"}
+        >
+          {isTesterCollapsed ? <ChevronRight size={16} className="rotate-180" /> : <ChevronRight size={16} />}
+        </button>
+      </div>
     </div>
   );
 };

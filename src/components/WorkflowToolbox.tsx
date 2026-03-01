@@ -15,6 +15,10 @@ import {
   GitBranch,
   Repeat,
   FileText,
+  Type,
+  Calculator,
+  Calendar,
+  UserPlus,
 } from "lucide-react";
 
 const ToolboxItem = ({ type, label, icon: Icon, color, iconName }: any) => {
@@ -186,6 +190,78 @@ export const WorkflowToolbox = () => {
           icon={Code}
           iconName="Code"
           color="text-yellow-600"
+        />
+
+        <CategoryLabel label="Specialized Transformers" />
+        <ToolboxItem
+          type="custom"
+          label="String: Cut"
+          icon={Type}
+          iconName="Type"
+          color="text-blue-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="String: Case"
+          icon={Type}
+          iconName="Type"
+          color="text-blue-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="String: Join"
+          icon={Type}
+          iconName="Type"
+          color="text-blue-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="String: Replace"
+          icon={Type}
+          iconName="Type"
+          color="text-blue-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="Math: Calculate"
+          icon={Calculator}
+          iconName="Calculator"
+          color="text-purple-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="Number: Format"
+          icon={Calculator}
+          iconName="Calculator"
+          color="text-purple-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="Date: Format"
+          icon={Calendar}
+          iconName="Calendar"
+          color="text-orange-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="Date: Add/Subtract"
+          icon={Calendar}
+          iconName="Calendar"
+          color="text-orange-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="Enrichment: Customer"
+          icon={UserPlus}
+          iconName="UserPlus"
+          color="text-pink-600"
+        />
+        <ToolboxItem
+          type="custom"
+          label="Enrichment: Product"
+          icon={UserPlus}
+          iconName="UserPlus"
+          color="text-pink-600"
         />
 
         <CategoryLabel label="Integrations" />
