@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Sidebar } from "./components/Sidebar";
 import { StructuredWorkflowEditor } from "./components/StructuredWorkflowEditor";
 import { Menu, X } from "lucide-react";
@@ -13,6 +13,7 @@ import { RepositoryView } from "./components/views/RepositoryView";
 import { SettingsView } from "./components/views/SettingsView";
 import { HelpView } from "./components/views/HelpView";
 import { ModulesView } from "./components/views/ModulesView";
+import { WorkflowsView } from "./components/views/WorkflowsView";
 
 const App = () => {
   const [activeView, setActiveView] = useState("dashboard");
@@ -30,8 +31,10 @@ const App = () => {
   const handleNavigate = (view: string) => {
     setActiveView(view);
     setIsMobileMenuOpen(false); // Close mobile menu on navigation
-    if (["workflows", "modules", "module-editor"].includes(view)) {
+    if (["workflow-editor", "module-editor"].includes(view)) {
       setIsSidebarCollapsed(true);
+    } else {
+      setIsSidebarCollapsed(false);
     }
   };
 
@@ -58,8 +61,11 @@ const App = () => {
       case "module-editor":
         return <StructuredWorkflowEditor mode="module" key="module-editor" />;
       case "workflows":
+        return <WorkflowsView onEditWorkflow={(name) => setActiveView("workflow-editor")} />;
+      case "workflow-editor":
+        return <StructuredWorkflowEditor mode="workflow" key="workflow-editor" />;
       default:
-        return <StructuredWorkflowEditor mode="workflow" />;
+        return <DashboardView />;
     }
   };
 
