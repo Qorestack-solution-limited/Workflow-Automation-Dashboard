@@ -47,6 +47,7 @@ interface Step {
   id: string;
   type: StepType;
   label: string;
+  tag?: string;
   config: any;
   children?: Step[];
   branch?: 'true' | 'false';
@@ -123,7 +124,7 @@ const TransformerTester = () => (
   </div>
 );
 
-const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBranch }: { step: Step, onUpdate: any, onDelete: any, onAddNested?: any, onDropOnBranch?: any }) => {
+const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBranch, index }: { step: Step, onUpdate: any, onDelete: any, onAddNested?: any, onDropOnBranch?: any, index?: number }) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const isLogic = step.type === 'Condition' || step.type === 'Loop';
@@ -132,6 +133,14 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
   const trueBranchSteps = step.children?.filter(c => c.branch === 'true') || [];
   const falseBranchSteps = step.children?.filter(c => c.branch === 'false') || [];
   const loopSteps = step.children || [];
+
+  const onDragStart = (e: React.DragEvent) => {
+    e.dataTransfer.setData('application/step-id', step.id);
+    if (index !== undefined) {
+      e.dataTransfer.setData('application/step-index', index.toString());
+    }
+    e.dataTransfer.effectAllowed = 'move';
+  };
 
   const onDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -609,17 +618,36 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
   };
 
   return (
-    <div className="mb-4" data-testid={`step-${step.type}`}>
+    <div
+      className="mb-4"
+      data-testid={`step-${step.type}`}
+      draggable={!isTrigger}
+      onDragStart={onDragStart}
+    >
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         {/* Step Header */}
         <div className="p-3 flex items-center gap-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
-          <GripVertical size={16} className="text-gray-300 cursor-grab" />
+          <GripVertical size={16} className="text-gray-300 cursor-grab active:cursor-grabbing" />
           <div className="flex-1 flex items-center gap-2">
             <span className="text-sm font-semibold text-gray-900">{isTrigger ? 'Trigger Name' : 'Manage name'}</span>
             <div className="flex-1 flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded group">
               <span className="text-sm text-gray-700 flex-1">{step.type}</span>
               <ChevronDown size={14} className="text-gray-400" />
             </div>
+            {!isTrigger && (
+              <div className="w-32">
+                <Input
+                  placeholder="Add tag..."
+                  value={step.tag || ''}
+                  onChange={(e) => {
+                    e.stopPropagation();
+                    onUpdate(step.id, { tag: e.target.value });
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-8 text-[10px] bg-gray-50/50 border-dashed"
+                />
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400"><BookOpen size={16} /></Button>
@@ -652,7 +680,7 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                    <TreeItem key={child.id} colorClass="border-emerald-200">
                      <TransformerStepCard
                       step={child}
-                      onUpdate={() => {}}
+                      onUpdate={onUpdate}
                       onDelete={onDelete}
                       onAddNested={onAddNested}
                       onDropOnBranch={onDropOnBranch}
@@ -685,7 +713,7 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                    <TreeItem key={child.id} colorClass="border-red-200">
                      <TransformerStepCard
                       step={child}
-                      onUpdate={() => {}}
+                      onUpdate={onUpdate}
                       onDelete={onDelete}
                       onAddNested={onAddNested}
                       onDropOnBranch={onDropOnBranch}
@@ -721,7 +749,7 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                    <TreeItem key={child.id} colorClass="border-blue-200">
                      <TransformerStepCard
                       step={child}
-                      onUpdate={() => {}}
+                      onUpdate={onUpdate}
                       onDelete={onDelete}
                       onAddNested={onAddNested}
                       onDropOnBranch={onDropOnBranch}
@@ -747,7 +775,9 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
 };
 
 export const StructuredWorkflowEditor = () => {
-  const [isTesterCollapsed, setIsTesterCollapsed] = useState(false);
+  const [isTesterCollapsed, setIsTesterCollapsed] = useState(true);
+  const [workflowName, setWorkflowName] = useState("");
+  const [isSetupComplete, setIsSetupComplete] = useState(false);
   const [triggers, setTriggers] = useState<Step[]>([
     { id: 't1', type: 'Shopify Webhook', label: 'Shopify Order Trigger', config: {} }
   ]);
@@ -810,6 +840,23 @@ export const StructuredWorkflowEditor = () => {
     });
   }, []);
 
+  const handleUpdateStep = useCallback((id: string, updates: Partial<Step>) => {
+    const updateInList = (list: Step[]): Step[] => {
+      return list.map(step => {
+        if (step.id === id) {
+          return { ...step, ...updates };
+        }
+        if (step.children) {
+          return { ...step, children: updateInList(step.children) };
+        }
+        return step;
+      });
+    };
+
+    setSteps(prev => updateInList(prev));
+    setTriggers(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+  }, []);
+
   const onDragOver = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     event.dataTransfer.dropEffect = 'move';
@@ -818,6 +865,21 @@ export const StructuredWorkflowEditor = () => {
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     const label = event.dataTransfer.getData('application/label') as StepType;
+    const movedStepId = event.dataTransfer.getData('application/step-id');
+    const movedStepIndexStr = event.dataTransfer.getData('application/step-index');
+
+    if (movedStepId && movedStepIndexStr) {
+      // Internal reordering
+      const fromIndex = parseInt(movedStepIndexStr);
+      setSteps(prev => {
+        const newSteps = [...prev];
+        const [movedItem] = newSteps.splice(fromIndex, 1);
+        newSteps.push(movedItem); // Simplistic drop-to-end for now
+        return newSteps;
+      });
+      return;
+    }
+
     if (!label) return;
 
     const newStep: Step = {
@@ -836,6 +898,42 @@ export const StructuredWorkflowEditor = () => {
     }
   }, []);
 
+  if (!isSetupComplete) {
+    return (
+      <div className="h-full w-full flex items-center justify-center bg-gray-50 p-6">
+        <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+          <div className="flex justify-center mb-6">
+            <div className="p-3 bg-blue-50 rounded-full">
+              <ArrowRightLeft className="text-blue-600" size={32} />
+            </div>
+          </div>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-2">Create Entity Transformer</h2>
+          <p className="text-gray-500 text-center mb-8">Give your transformer a descriptive name to get started.</p>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="workflow-name">Transformer Name</Label>
+              <Input
+                id="workflow-name"
+                placeholder="Shopify to sFTP [850 Transformer]..."
+                value={workflowName}
+                onChange={(e) => setWorkflowName(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <Button
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-6"
+              disabled={!workflowName.trim()}
+              onClick={() => setIsSetupComplete(true)}
+            >
+              Start Building
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-full w-full bg-gray-50 overflow-hidden relative">
       <WorkflowToolbox />
@@ -850,7 +948,7 @@ export const StructuredWorkflowEditor = () => {
         <div className="bg-white border-b border-gray-200 px-8 py-4 flex items-center gap-2 text-sm">
            <span className="text-gray-900 font-bold">Transformers</span>
            <ChevronRight size={14} className="text-gray-400" />
-           <span className="text-blue-600 font-medium">Shopify to sFTP [850 Transformer][TravelPro.EU][Loc...</span>
+           <span className="text-blue-600 font-medium">{workflowName}</span>
            <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><Settings2 size={14} /></button>
            <button className="p-1 hover:bg-gray-100 rounded text-gray-400"><BookOpen size={14} /></button>
 
@@ -895,7 +993,7 @@ export const StructuredWorkflowEditor = () => {
                     <TransformerStepCard
                       key={trigger.id}
                       step={trigger}
-                      onUpdate={() => {}}
+                      onUpdate={handleUpdateStep}
                       onDelete={handleDelete}
                     />
                   ))
@@ -921,14 +1019,15 @@ export const StructuredWorkflowEditor = () => {
               <h2 className="text-sm font-bold text-gray-900 uppercase tracking-tight">Data transformers</h2>
 
               <div className="pl-4 border-l-2 border-blue-500 space-y-4" data-testid="transformers-list">
-                {steps.map(step => (
+                {steps.map((step, idx) => (
                   <TransformerStepCard
                     key={step.id}
                     step={step}
-                    onUpdate={() => {}}
+                    onUpdate={handleUpdateStep}
                     onDelete={handleDelete}
                     onAddNested={handleAddNested}
                     onDropOnBranch={handleAddNested}
+                    index={idx}
                   />
                 ))}
               </div>
