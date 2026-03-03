@@ -40,7 +40,7 @@ const App = () => {
 
   const renderContent = () => {
     switch (activeView) {
-      case "dashboardd":
+      case "dashboard":
         return <DashboardView />;
       case "analytics":
         return <AnalyticsView />;
