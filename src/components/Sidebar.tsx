@@ -70,7 +70,7 @@ const SectionLabel = ({ label, collapsed = false }: { label: string; collapsed?:
 export const Sidebar = ({ activeView, onNavigate, collapsed, onToggle }: SidebarProps) => {
   return (
     <div
-      className={`h-full bg-white border-r border-gray-200 flex flex-col shrink-0 transition-all duration-300 ${collapsed ? "w-20" : "w-64"}`}
+      className={`h-full bg-white flex flex-col shrink-0 transition-all duration-300 ${collapsed ? "w-0 opacity-0 overflow-hidden border-r-0" : "w-64 border-r border-gray-200"}`}
     >
       {/* Logo */}
       <div className={`h-16 flex items-center px-6 border-b border-gray-100 cursor-pointer ${collapsed ? "justify-center" : "justify-between"}`}>
@@ -87,7 +87,7 @@ export const Sidebar = ({ activeView, onNavigate, collapsed, onToggle }: Sidebar
           className="hidden md:flex p-1 hover:bg-gray-100 rounded-md text-gray-400 transition-colors"
           onClick={onToggle}
         >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          <ChevronLeft size={18} />
         </button>
       </div>
 
