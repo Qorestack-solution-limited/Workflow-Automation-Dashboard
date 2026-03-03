@@ -59,12 +59,44 @@ const StepConnector = ({ isLast, colorClass, top = 24 }: { isLast?: boolean, col
   </div>
 );
 
-const TreeItem = ({ children, isLast, colorClass, top = 24 }: { children: React.ReactNode, isLast?: boolean, colorClass: string, top?: number }) => (
-  <div className="relative">
-    <StepConnector isLast={isLast} colorClass={colorClass} top={top} />
-    {children}
-  </div>
-);
+const TreeItem = ({ children, isLast, colorClass, top = 24, onDropBetween, index }: { children: React.ReactNode, isLast?: boolean, colorClass: string, top?: number, onDropBetween?: any, index?: number }) => {
+  const [isOver, setIsOver] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOver(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsOver(false);
+    const movedStepId = e.dataTransfer.getData('application/step-id');
+    const type = e.dataTransfer.getData('application/label');
+
+    if (onDropBetween && index !== undefined) {
+      onDropBetween(index, movedStepId || type);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <div
+        className={`h-2 transition-all ${isOver ? 'bg-blue-400 my-2 rounded-full' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      />
+      <StepConnector isLast={isLast} colorClass={colorClass} top={top} />
+      {children}
+    </div>
+  );
+};
 
 const TransformerTester = () => (
   <div className="w-full h-full bg-white border-l border-gray-200 flex flex-col">
@@ -113,7 +145,7 @@ const TransformerTester = () => (
   </div>
 );
 
-const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBranch, index }: { step: Step, onUpdate: any, onDelete: any, onAddNested?: any, onDropOnBranch?: any, index?: number }) => {
+const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBranch, index, parentId, branch }: { step: Step, onUpdate: any, onDelete: any, onAddNested?: any, onDropOnBranch?: any, index?: number, parentId?: string, branch?: 'true' | 'false' }) => {
   const [isOpen, setIsOpen] = useState(true);
 
   const isLogic = step.type === 'Condition' || step.type === 'Loop';
@@ -469,8 +501,14 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                  </div>
                  <div className="pl-4 sm:pl-6 space-y-4 min-h-[40px] border-l-2 border-emerald-100 relative" onDragOver={onDragOver} onDrop={(e) => handleDrop(e, 'true')}>
                     {trueBranchSteps.map((child, idx) => (
-                        <TreeItem key={child.id} colorClass="border-emerald-200" isLast={idx === trueBranchSteps.length - 1 && trueBranchSteps.length > 0}>
-                           <TransformerStepCard step={child} onUpdate={onUpdate} onDelete={onDelete} onAddNested={onAddNested} onDropOnBranch={onDropOnBranch} index={idx} />
+                        <TreeItem
+                          key={child.id}
+                          colorClass="border-emerald-200"
+                          isLast={idx === trueBranchSteps.length - 1 && trueBranchSteps.length > 0}
+                          index={idx}
+                          onDropBetween={(targetIdx: number, typeOrId: string) => onDropOnBranch(step.id, 'true', typeOrId, targetIdx)}
+                        >
+                           <TransformerStepCard step={child} onUpdate={onUpdate} onDelete={onDelete} onAddNested={onAddNested} onDropOnBranch={onDropOnBranch} index={idx} parentId={step.id} branch="true" />
                         </TreeItem>
                     ))}
                     <div className="py-2 text-center border border-dashed border-emerald-200 rounded text-emerald-400 text-[10px] bg-emerald-50/30">Drop items here</div>
@@ -484,8 +522,14 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                  </div>
                  <div className="pl-4 sm:pl-6 space-y-4 min-h-[40px] border-l-2 border-red-100 relative" onDragOver={onDragOver} onDrop={(e) => handleDrop(e, 'false')}>
                     {falseBranchSteps.map((child, idx) => (
-                        <TreeItem key={child.id} colorClass="border-red-200" isLast={idx === falseBranchSteps.length - 1 && falseBranchSteps.length > 0}>
-                           <TransformerStepCard step={child} onUpdate={onUpdate} onDelete={onDelete} onAddNested={onAddNested} onDropOnBranch={onDropOnBranch} index={idx} />
+                        <TreeItem
+                          key={child.id}
+                          colorClass="border-red-200"
+                          isLast={idx === falseBranchSteps.length - 1 && falseBranchSteps.length > 0}
+                          index={idx}
+                          onDropBetween={(targetIdx: number, typeOrId: string) => onDropOnBranch(step.id, 'false', typeOrId, targetIdx)}
+                        >
+                           <TransformerStepCard step={child} onUpdate={onUpdate} onDelete={onDelete} onAddNested={onAddNested} onDropOnBranch={onDropOnBranch} index={idx} parentId={step.id} branch="false" />
                         </TreeItem>
                     ))}
                     <div className="py-2 text-center border border-dashed border-red-200 rounded text-red-400 text-[10px] bg-red-50/30">Drop items here</div>
@@ -501,8 +545,14 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
                </div>
                <div className="pl-4 sm:pl-6 space-y-4 min-h-[40px] border-l-2 border-blue-100 relative" onDragOver={onDragOver} onDrop={(e) => handleDrop(e)}>
                  {loopSteps.map((child, idx) => (
-                   <TreeItem key={child.id} colorClass="border-blue-200" isLast={idx === loopSteps.length - 1 && loopSteps.length > 0}>
-                     <TransformerStepCard step={child} onUpdate={onUpdate} onDelete={onDelete} onAddNested={onAddNested} onDropOnBranch={onDropOnBranch} index={idx} />
+                   <TreeItem
+                     key={child.id}
+                     colorClass="border-blue-200"
+                     isLast={idx === loopSteps.length - 1 && loopSteps.length > 0}
+                     index={idx}
+                     onDropBetween={(targetIdx: number, typeOrId: string) => onDropOnBranch(step.id, undefined, typeOrId, targetIdx)}
+                   >
+                     <TransformerStepCard step={child} onUpdate={onUpdate} onDelete={onDelete} onAddNested={onAddNested} onDropOnBranch={onDropOnBranch} index={idx} parentId={step.id} />
                    </TreeItem>
                  ))}
                  <div className="py-2 text-center border border-dashed border-blue-200 rounded text-blue-400 text-[10px] bg-blue-50/30">Drop items here</div>
@@ -561,56 +611,71 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
     return undefined;
   }, []);
 
-  const handleAddNested = useCallback((parentId: string, branch?: 'true' | 'false', typeOrId: string) => {
-    let stepToMove: Step | undefined;
+  const handleAddNested = useCallback((parentId: string, branch?: 'true' | 'false', typeOrId: string, targetIndex?: number) => {
+    setSteps(prevSteps => {
+      let stepToMove: Step | undefined;
 
-    // First, look for the step to move in the current state
-    setSteps(currentSteps => {
-        const foundInSteps = findStepById(currentSteps, typeOrId);
-        if (foundInSteps) {
-            stepToMove = { ...foundInSteps, branch };
-            return removeFromList(currentSteps, typeOrId);
-        }
-        return currentSteps;
+      // Helper to find and remove step in one pass
+      const extractStep = (list: Step[]): [Step[], Step | undefined] => {
+        let extracted: Step | undefined;
+        const newList = list.filter(s => {
+          if (s.id === typeOrId) { extracted = s; return false; }
+          return true;
+        }).map(s => {
+          if (s.children) {
+            const [newChildren, found] = extractStep(s.children);
+            if (found) extracted = found;
+            return { ...s, children: newChildren };
+          }
+          return s;
+        });
+        return [newList, extracted];
+      };
+
+      const [tempSteps, foundInSteps] = extractStep(prevSteps);
+      stepToMove = foundInSteps;
+
+      if (!stepToMove) {
+        // Check triggers (though triggers aren't nested, they might be moved to transformers)
+        setTriggers(prevTriggers => {
+          const found = prevTriggers.find(t => t.id === typeOrId);
+          if (found) {
+            stepToMove = found;
+            return prevTriggers.filter(t => t.id !== typeOrId);
+          }
+          return prevTriggers;
+        });
+      }
+
+      const newStep: Step = stepToMove ? { ...stepToMove, branch } : {
+        id: Math.random().toString(36).substr(2, 9),
+        type: typeOrId as StepType,
+        label: `New ${typeOrId}`,
+        config: {},
+        branch
+      };
+
+      const insertIntoChildren = (list: Step[]): Step[] => {
+        return list.map(step => {
+          if (step.id === parentId) {
+            const children = [...(step.children || [])];
+            if (targetIndex !== undefined) {
+              children.splice(targetIndex, 0, newStep);
+            } else {
+              children.push(newStep);
+            }
+            return { ...step, children };
+          }
+          if (step.children) {
+            return { ...step, children: insertIntoChildren(step.children) };
+          }
+          return step;
+        });
+      };
+
+      return insertIntoChildren(tempSteps);
     });
-
-    setTriggers(currentTriggers => {
-        const foundInTriggers = currentTriggers.find(t => t.id === typeOrId);
-        if (foundInTriggers) {
-            stepToMove = { ...foundInTriggers, branch };
-            return currentTriggers.filter(t => t.id !== typeOrId);
-        }
-        return currentTriggers;
-    });
-
-    // We use a small timeout to ensure the state updates from above are processed if we were to rely on them,
-    // but better to just use the stepToMove we captured if it was existing, or create new one.
-    // However, setSteps is async. We should probably use a functional update that handles both removal and addition.
-
-    setSteps(prev => {
-        // If it wasn't found in previous updates (which haven't flushed yet), it's a new step type
-        const newStep: Step = stepToMove ? stepToMove : {
-            id: Math.random().toString(36).substr(2, 9),
-            type: typeOrId as StepType,
-            label: `New ${typeOrId}`,
-            config: {},
-            branch
-        };
-
-        const updateChildren = (list: Step[]): Step[] => {
-            return list.map(step => {
-                if (step.id === parentId) {
-                    return { ...step, children: [...(step.children || []), newStep] };
-                }
-                if (step.children) {
-                    return { ...step, children: updateChildren(step.children) };
-                }
-                return step;
-            });
-        };
-        return updateChildren(prev);
-    });
-  }, [findStepById]);
+  }, []);
 
   const handleUpdateStep = useCallback((id: string, updates: Partial<Step>) => {
     const updateInList = (list: Step[]): Step[] => {
@@ -708,7 +773,7 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
             {mode === 'workflow' && (
               <section className="space-y-4">
                 <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider flex items-center gap-2"><Zap size={14} className="text-amber-500" /> Triggers</h2>
-                <div className="pl-4 border-l-2 border-amber-400 space-y-4">
+                <div data-testid="main-triggers-list" className="pl-4 border-l-2 border-amber-400 space-y-4">
                   {triggers.map((t, idx) => (
                     <TransformerStepCard
                       key={t.id}
@@ -724,17 +789,57 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
 
             <section className="space-y-4">
               <h2 className="text-xs font-bold text-gray-900 uppercase tracking-wider">Transformers</h2>
-              <div className="pl-4 border-l-2 border-blue-500 space-y-4">
+              <div data-testid="main-transformers-list" className="pl-4 border-l-2 border-blue-500 space-y-4">
                 {steps.map((s, idx) => (
-                  <TransformerStepCard
+                  <TreeItem
                     key={s.id}
-                    step={s}
-                    onUpdate={handleUpdateStep}
-                    onDelete={handleDelete}
-                    onAddNested={handleAddNested}
-                    onDropOnBranch={handleAddNested}
+                    colorClass="border-blue-500"
+                    isLast={idx === steps.length - 1}
                     index={idx}
-                  />
+                    onDropBetween={(targetIdx: number, typeOrId: string) => {
+                        setSteps(prev => {
+                            let stepToMove: Step | undefined;
+                            const extractStep = (list: Step[]): [Step[], Step | undefined] => {
+                                let extracted: Step | undefined;
+                                const newList = list.filter(s => {
+                                    if (s.id === typeOrId) { extracted = s; return false; }
+                                    return true;
+                                }).map(s => {
+                                    if (s.children) {
+                                        const [newChildren, found] = extractStep(s.children);
+                                        if (found) extracted = found;
+                                        return { ...s, children: newChildren };
+                                    }
+                                    return s;
+                                });
+                                return [newList, extracted];
+                            };
+                            const [tempSteps, found] = extractStep(prev);
+                            stepToMove = found;
+
+                            const newStep: Step = stepToMove ? { ...stepToMove, branch: undefined } : {
+                                id: Math.random().toString(36).substr(2, 9),
+                                type: typeOrId as StepType,
+                                label: `New ${typeOrId}`,
+                                config: {}
+                            };
+
+                            const result = [...tempSteps];
+                            result.splice(targetIdx, 0, newStep);
+                            return result;
+                        });
+                    }}
+                  >
+                    <TransformerStepCard
+                      key={s.id}
+                      step={s}
+                      onUpdate={handleUpdateStep}
+                      onDelete={handleDelete}
+                      onAddNested={handleAddNested}
+                      onDropOnBranch={handleAddNested}
+                      index={idx}
+                    />
+                  </TreeItem>
                 ))}
               </div>
             </section>

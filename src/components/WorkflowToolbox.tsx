@@ -1,5 +1,11 @@
 import React from "react";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "./ui/accordion";
+import {
   Zap,
   ArrowRightLeft,
   Filter,
@@ -93,41 +99,69 @@ export const WorkflowToolbox = ({ mode = 'workflow' }: { mode?: 'workflow' | 'mo
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-        <CategoryLabel label="Logic" />
-        <ToolboxItem label="Condition" icon={GitBranch} color="text-amber-600" />
-        <ToolboxItem label="Loop" icon={Repeat} color="text-cyan-600" />
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <Accordion type="multiple" defaultValue={["logic", "triggers", "transformers"]} className="w-full">
+          <AccordionItem value="logic" className="border-b-0 px-4">
+            <AccordionTrigger className="hover:no-underline py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              Logic
+            </AccordionTrigger>
+            <AccordionContent className="pb-2">
+              <ToolboxItem label="Condition" icon={GitBranch} color="text-amber-600" />
+              <ToolboxItem label="Loop" icon={Repeat} color="text-cyan-600" />
+            </AccordionContent>
+          </AccordionItem>
 
-        {mode === 'workflow' && (
-          <>
-            <CategoryLabel label="Triggers" />
-            <ToolboxItem label="Webhook" icon={Globe} color="text-purple-600" />
-            <ToolboxItem label="Schedule" icon={Clock} color="text-blue-600" />
-            <ToolboxItem label="Form Submit" icon={Zap} color="text-orange-600" />
-            <ToolboxItem label="Manual Trigger" icon={MousePointerClick} color="text-emerald-500" />
-            <ToolboxItem label="Incoming SFTP" icon={FolderInput} color="text-indigo-600" />
-            <ToolboxItem label="Shopify Webhook" icon={ShoppingBag} color="text-green-600" />
-          </>
-        )}
+          {mode === 'workflow' && (
+            <AccordionItem value="triggers" className="border-b-0 px-4">
+              <AccordionTrigger className="hover:no-underline py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Triggers
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <ToolboxItem label="Webhook" icon={Globe} color="text-purple-600" />
+                <ToolboxItem label="Schedule" icon={Clock} color="text-blue-600" />
+                <ToolboxItem label="Form Submit" icon={Zap} color="text-orange-600" />
+                <ToolboxItem label="Manual Trigger" icon={MousePointerClick} color="text-emerald-500" />
+                <ToolboxItem label="Incoming SFTP" icon={FolderInput} color="text-indigo-600" />
+                <ToolboxItem label="Shopify Webhook" icon={ShoppingBag} color="text-green-600" />
+              </AccordionContent>
+            </AccordionItem>
+          )}
 
-        <CategoryLabel label="Transformers" />
-        <ToolboxItem label="Set Value" icon={FileText} color="text-indigo-600" />
-        <ToolboxItem label="Data Mapper" icon={ArrowRightLeft} color="text-green-600" />
-        <ToolboxItem label="Filter" icon={Filter} color="text-red-600" />
-        <ToolboxItem label="JS Code" icon={Code} color="text-yellow-600" />
+          <AccordionItem value="transformers" className="border-b-0 px-4">
+            <AccordionTrigger className="hover:no-underline py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              Transformers
+            </AccordionTrigger>
+            <AccordionContent className="pb-2">
+              <ToolboxItem label="Set Value" icon={FileText} color="text-indigo-600" />
+              <ToolboxItem label="Data Mapper" icon={ArrowRightLeft} color="text-green-600" />
+              <ToolboxItem label="Filter" icon={Filter} color="text-red-600" />
+              <ToolboxItem label="JS Code" icon={Code} color="text-yellow-600" />
+            </AccordionContent>
+          </AccordionItem>
 
-        {mode === 'workflow' && (
-          <>
-            <CategoryLabel label="Modules" />
-            <ToolboxItem label="Call Module" icon={GitBranch} color="text-blue-600" />
-          </>
-        )}
+          {mode === 'workflow' && (
+            <AccordionItem value="modules" className="border-b-0 px-4">
+              <AccordionTrigger className="hover:no-underline py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                Modules
+              </AccordionTrigger>
+              <AccordionContent className="pb-2">
+                <ToolboxItem label="Call Module" icon={GitBranch} color="text-blue-600" />
+              </AccordionContent>
+            </AccordionItem>
+          )}
 
-        <CategoryLabel label="Integrations" />
-        <ToolboxItem label="Database" icon={Database} color="text-blue-500" />
-        <ToolboxItem label="Email" icon={Mail} color="text-red-500" />
-        <ToolboxItem label="Slack" icon={Slack} color="text-purple-500" />
-        <ToolboxItem label="AI Prompt" icon={MessageSquare} color="text-emerald-500" />
+          <AccordionItem value="integrations" className="border-b-0 px-4">
+            <AccordionTrigger className="hover:no-underline py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+              Integrations
+            </AccordionTrigger>
+            <AccordionContent className="pb-2">
+              <ToolboxItem label="Database" icon={Database} color="text-blue-500" />
+              <ToolboxItem label="Email" icon={Mail} color="text-red-500" />
+              <ToolboxItem label="Slack" icon={Slack} color="text-purple-500" />
+              <ToolboxItem label="AI Prompt" icon={MessageSquare} color="text-emerald-500" />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     </div>
   );

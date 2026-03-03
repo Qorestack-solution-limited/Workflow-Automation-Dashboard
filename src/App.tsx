@@ -57,11 +57,11 @@ const App = () => {
       case "help":
         return <HelpView />;
       case "modules":
-        return <ModulesView onEditModule={(name) => setActiveView("module-editor")} />;
+        return <ModulesView onEditModule={(name) => handleNavigate("module-editor")} />;
       case "module-editor":
         return <StructuredWorkflowEditor mode="module" key="module-editor" />;
       case "workflows":
-        return <WorkflowsView onEditWorkflow={(name) => setActiveView("workflow-editor")} />;
+        return <WorkflowsView onEditWorkflow={(name) => handleNavigate("workflow-editor")} />;
       case "workflow-editor":
         return <StructuredWorkflowEditor mode="workflow" key="workflow-editor" />;
       default:
@@ -70,7 +70,22 @@ const App = () => {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-gray-50 overflow-hidden font-sans text-gray-900 selection:bg-blue-100">
+    <div className="flex h-screen w-screen bg-gray-50 overflow-hidden font-sans text-gray-900 selection:bg-blue-100 relative">
+      {/* Sidebar restore button (Floating when sidebar is fully collapsed) */}
+      {isSidebarCollapsed && (
+        <button
+          onClick={toggleSidebar}
+          className="hidden md:flex fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg shadow-sm text-gray-500 hover:text-blue-600 hover:bg-gray-50 transition-all hover:scale-110 active:scale-95 group"
+          aria-label="Expand sidebar"
+        >
+          <Menu size={20} className="group-hover:hidden" />
+          <div className="hidden group-hover:flex items-center gap-2 pr-1">
+             <div className="w-5 h-5 bg-blue-600 rounded flex items-center justify-center text-white text-[10px]">F</div>
+             <span className="text-xs font-bold">FlowBuild</span>
+          </div>
+        </button>
+      )}
+
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 flex items-center px-4 justify-between">
         <div className="flex items-center gap-2 font-bold text-gray-900">
