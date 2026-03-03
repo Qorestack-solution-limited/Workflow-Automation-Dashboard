@@ -57,13 +57,23 @@ const App = () => {
       case "help":
         return <HelpView />;
       case "modules":
-        return <ModulesView onEditModule={(name) => handleNavigate("module-editor")} />;
+        return (
+          <ModulesView
+            onEditModule={(name) => setActiveView("module-editor")}
+          />
+        );
       case "module-editor":
         return <StructuredWorkflowEditor mode="module" key="module-editor" />;
       case "workflows":
-        return <WorkflowsView onEditWorkflow={(name) => handleNavigate("workflow-editor")} />;
+        return (
+          <WorkflowsView
+            onEditWorkflow={(name) => setActiveView("workflow-editor")}
+          />
+        );
       case "workflow-editor":
-        return <StructuredWorkflowEditor mode="workflow" key="workflow-editor" />;
+        return (
+          <StructuredWorkflowEditor mode="workflow" key="workflow-editor" />
+        );
       default:
         return <DashboardView />;
     }
@@ -89,7 +99,9 @@ const App = () => {
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 flex items-center px-4 justify-between">
         <div className="flex items-center gap-2 font-bold text-gray-900">
-          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">F</div>
+          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">
+            F
+          </div>
           <span>FlowBuild</span>
         </div>
         <button
@@ -101,10 +113,12 @@ const App = () => {
       </header>
 
       {/* Sidebar - Desktop and Mobile Overlay */}
-      <div className={`
+      <div
+        className={`
         fixed inset-0 z-40 md:relative md:flex md:inset-auto
         ${isMobileMenuOpen ? "block" : "hidden"}
-      `}>
+      `}
+      >
         {/* Backdrop for mobile */}
         <div
           className="absolute inset-0 bg-gray-900/50 md:hidden"
