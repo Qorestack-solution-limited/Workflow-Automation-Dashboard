@@ -57,23 +57,13 @@ const App = () => {
       case "help":
         return <HelpView />;
       case "modules":
-        return (
-          <ModulesView
-            onEditModule={(name) => setActiveView("module-editor")}
-          />
-        );
+        return <ModulesView onEditModule={(name) => handleNavigate("module-editor")} />;
       case "module-editor":
         return <StructuredWorkflowEditor mode="module" key="module-editor" />;
       case "workflows":
-        return (
-          <WorkflowsView
-            onEditWorkflow={(name) => setActiveView("workflow-editor")}
-          />
-        );
+        return <WorkflowsView onEditWorkflow={(name) => handleNavigate("workflow-editor")} />;
       case "workflow-editor":
-        return (
-          <StructuredWorkflowEditor mode="workflow" key="workflow-editor" />
-        );
+        return <StructuredWorkflowEditor mode="workflow" key="workflow-editor" />;
       default:
         return <DashboardView />;
     }
@@ -85,7 +75,7 @@ const App = () => {
       {isSidebarCollapsed && (
         <button
           onClick={toggleSidebar}
-          className="hidden md:flex fixed top-4 left-4 z-50 p-2 bg-white border border-gray-200 rounded-lg shadow-sm text-gray-500 hover:text-blue-600 hover:bg-gray-50 transition-all hover:scale-110 active:scale-95 group"
+          className="hidden md:flex fixed top-4 left-4 z-[60] p-2 bg-white border border-gray-200 rounded-lg shadow-sm text-gray-500 hover:text-blue-600 hover:bg-gray-50 transition-all hover:scale-110 active:scale-95 group"
           aria-label="Expand sidebar"
         >
           <Menu size={20} className="group-hover:hidden" />
@@ -97,11 +87,9 @@ const App = () => {
       )}
 
       {/* Mobile Header */}
-      <header className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 flex items-center px-4 justify-between">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-30 flex items-center px-4 justify-between md:hidden">
         <div className="flex items-center gap-2 font-bold text-gray-900">
-          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">
-            F
-          </div>
+          <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">F</div>
           <span>FlowBuild</span>
         </div>
         <button
@@ -113,19 +101,19 @@ const App = () => {
       </header>
 
       {/* Sidebar - Desktop and Mobile Overlay */}
-      <div
-        className={`
+      <div className={`
         fixed inset-0 z-40 md:relative md:flex md:inset-auto
-        ${isMobileMenuOpen ? "block" : "hidden"}
-      `}
-      >
+        ${isMobileMenuOpen ? "flex" : "hidden md:flex"}
+      `}>
         {/* Backdrop for mobile */}
-        <div
-          className="absolute inset-0 bg-gray-900/50 md:hidden"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-gray-900/50 md:hidden z-20"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        )}
 
-        <div className="relative h-full shrink-0 z-50">
+        <div className={`relative h-full shrink-0 z-10 ${isMobileMenuOpen ? "w-64" : "w-auto"}`}>
           <Sidebar
             activeView={activeView}
             onNavigate={handleNavigate}
@@ -135,7 +123,7 @@ const App = () => {
         </div>
       </div>
 
-      <main className="flex-1 h-full relative flex flex-col min-w-0 bg-gray-50 pt-16 md:pt-0">
+      <main className="flex-1 h-full relative flex flex-col min-w-0 bg-gray-50 pt-16 md:pt-0 z-0">
         {renderContent()}
       </main>
     </div>
