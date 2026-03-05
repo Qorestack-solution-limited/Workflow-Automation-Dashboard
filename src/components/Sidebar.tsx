@@ -156,19 +156,41 @@ export const Sidebar = ({ activeView, onNavigate, collapsed, onToggle }: Sidebar
           icon={GitBranch}
           label="Workflows"
           viewId="workflows"
-          active={activeView === "workflows"}
+          active={activeView === "workflows" || activeView === "workflow-editor"}
           collapsed={collapsed}
           onClick={() => onNavigate("workflows")}
         />
 
-        <SidebarItem
-          icon={Layers}
-          label="Logic Modules"
-          viewId="modules"
-          active={activeView === "modules" || activeView === "module-editor"}
-          collapsed={collapsed}
-          onClick={() => onNavigate("modules")}
-        />
+        <div className="space-y-1">
+          <SidebarItem
+            icon={Layers}
+            label="Logic Modules"
+            viewId="modules"
+            active={activeView === "modules" || activeView === "module-editor" || activeView === "terminal-logic"}
+            collapsed={collapsed}
+            onClick={() => onNavigate("modules")}
+          />
+          {!collapsed && (
+            <div className="pl-9 space-y-1">
+              <button
+                onClick={() => onNavigate("modules")}
+                className={`w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  activeView === "modules" || activeView === "module-editor" ? "text-blue-600 bg-blue-50" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                }`}
+              >
+                Module Library
+              </button>
+              <button
+                onClick={() => onNavigate("terminal-logic")}
+                className={`w-full text-left px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                  activeView === "terminal-logic" ? "text-blue-600 bg-blue-50" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                }`}
+              >
+                Terminal Logic
+              </button>
+            </div>
+          )}
+        </div>
 
         <SectionLabel label="System" collapsed={collapsed} />
 

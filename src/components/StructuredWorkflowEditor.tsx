@@ -431,11 +431,15 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
             Accessor <span className="text-red-500">*</span>
           </Label>
           <div className="flex gap-2">
-            <div className="flex-1 flex items-center gap-2 px-3 py-2 border border-gray-200 rounded bg-white overflow-hidden">
-              <span className="text-sm text-gray-600 flex-1 truncate">Key accessor</span>
-              <ChevronDown size={14} className="text-gray-400 shrink-0" />
+            <div className="flex-1">
+              <Input
+                value={step.config.accessor || ''}
+                onChange={(e) => onUpdate(step.id, { config: { ...step.config, accessor: e.target.value } })}
+                placeholder="Key accessor (e.g. data.items)"
+                className="h-10 text-sm bg-white"
+              />
             </div>
-            <Button variant="ghost" size="icon" className="h-9 w-9 border border-gray-200 text-gray-400 shrink-0"><BookOpen size={16} /></Button>
+            <Button variant="ghost" size="icon" className="h-10 w-10 border border-gray-200 text-gray-400 shrink-0"><BookOpen size={16} /></Button>
           </div>
         </div>
 
@@ -492,7 +496,13 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
         <div className="p-3 flex items-center gap-3 border-b border-gray-50 hover:bg-gray-50 cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
           <GripVertical size={16} className="text-gray-300 cursor-grab active:cursor-grabbing shrink-0" />
           <div className="flex-1 flex flex-col sm:flex-row sm:items-center gap-2 overflow-hidden">
-            <span className="text-sm font-semibold text-gray-900 truncate">{isTrigger ? 'Trigger' : 'Manage name'}</span>
+            <input
+              className="text-sm font-semibold text-gray-900 bg-transparent border-none focus:ring-0 p-0 w-full truncate placeholder:text-gray-400"
+              value={step.label}
+              placeholder={isTrigger ? 'Trigger Name' : 'Step Name'}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => onUpdate(step.id, { label: e.target.value })}
+            />
             <div className="flex items-center gap-2 px-3 py-1 bg-white border border-gray-200 rounded text-xs text-gray-700 min-w-0">
               <span className="truncate">{step.type}</span>
               <ChevronDown size={12} className="text-gray-400 shrink-0" />
@@ -748,7 +758,7 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
     };
     setSteps(prev => updateInList(prev));
     setTriggers(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
-  }, []);
+  }, [steps, triggers]);
 
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
