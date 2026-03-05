@@ -599,6 +599,7 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
   const [isToolboxCollapsed, setIsToolboxCollapsed] = useState(false);
   const [workflowName, setWorkflowName] = useState("");
   const [isSetupComplete, setIsSetupComplete] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const [triggers, setTriggers] = useState<Step[]>([
     { id: 't1', type: 'Shopify Webhook', label: 'Trigger', config: {} }
@@ -760,6 +761,29 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
     setTriggers(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
   }, [steps, triggers]);
 
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    // Construct the payload for the backend
+    const payload = {
+      name: workflowName,
+      mode: mode,
+      updatedAt: new Date().toISOString(),
+      definition: {
+        triggers: triggers,
+        transformers: steps
+      }
+    };
+
+    console.log('Sending to backend:', JSON.stringify(payload, null, 2));
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    setIsSaving(false);
+    alert('Workflow saved successfully! Check console for the JSON payload.');
+  };
+
   const onDrop = useCallback((event: React.DragEvent) => {
     event.preventDefault();
     const label = event.dataTransfer.getData('application/label') as StepType;
@@ -830,7 +854,21 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
                 <FlaskConical size={16} />
                 <span className="hidden sm:inline">Test</span>
               </Button>
-              <Button size="sm" className="bg-blue-600 text-white">Save</Button>
+              <Button
+                size="sm"
+                className="bg-blue-600 text-white gap-2 min-w-[80px]"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <Save size={16} />
+                    <span>Save</span>
+                  </>
+                )}
+              </Button>
            </div>
         </div>
 

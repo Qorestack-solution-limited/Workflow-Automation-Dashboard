@@ -90,7 +90,7 @@ const App = () => {
       )}
 
       {/* Mobile Header */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-30 flex items-center px-4 justify-between md:hidden">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 z-50 flex items-center px-4 justify-between md:hidden pointer-events-none max-md:pointer-events-auto">
         <div className="flex items-center gap-2 font-bold text-gray-900">
           <div className="w-8 h-8 bg-blue-600 rounded flex items-center justify-center text-white">F</div>
           <span>FlowBuild</span>
@@ -126,7 +126,7 @@ const App = () => {
         </div>
       </div>
 
-      <main className="flex-1 h-full relative flex flex-col min-w-0 bg-gray-50 pt-16 md:pt-0 z-0">
+      <main className="flex-1 h-full relative flex flex-col min-w-0 bg-gray-50 pt-16 md:pt-0">
         {renderContent()}
       </main>
     </div>
