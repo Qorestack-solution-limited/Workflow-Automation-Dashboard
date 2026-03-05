@@ -182,6 +182,24 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
     }
   };
 
+  const handleCardDrop = (e: React.DragEvent) => {
+    if (isTrigger) return; // Triggers don't support being dropped onto
+    e.preventDefault();
+    e.stopPropagation();
+    const movedStepId = e.dataTransfer.getData('application/step-id');
+    const type = e.dataTransfer.getData('application/label') as StepType;
+
+    if (movedStepId === step.id) return; // Don't drop on self
+
+    // Use onDropOnBranch logic but with targetIndex if we can determine parent
+    if (onDropOnBranch && parentId) {
+       onDropOnBranch(parentId, branch, movedStepId || type, index);
+    } else if (onDropOnBranch && !parentId) {
+       // Root level drop
+       onDropOnBranch('root', undefined, movedStepId || type, index);
+    }
+  };
+
   const renderLogicConfig = () => {
     if (step.type === 'Condition') {
       return (
@@ -466,6 +484,8 @@ const TransformerStepCard = ({ step, onUpdate, onDelete, onAddNested, onDropOnBr
       data-testid={`step-${step.type}`}
       draggable={!isTrigger}
       onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={handleCardDrop}
     >
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
         {/* Step Header */}
@@ -612,42 +632,68 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
   }, []);
 
   const handleAddNested = useCallback((parentId: string, branch?: 'true' | 'false', typeOrId: string, targetIndex?: number) => {
-    setSteps(prevSteps => {
-      let stepToMove: Step | undefined;
+    // 1. First, find if we are moving an existing step or adding a new one
+    // We do this by checking if typeOrId exists in our current state (triggers or steps)
+    const existingStep = findStepById([...triggers, ...steps], typeOrId);
 
-      // Helper to find and remove step in one pass
-      const extractStep = (list: Step[]): [Step[], Step | undefined] => {
-        let extracted: Step | undefined;
-        const newList = list.filter(s => {
-          if (s.id === typeOrId) { extracted = s; return false; }
-          return true;
-        }).map(s => {
-          if (s.children) {
-            const [newChildren, found] = extractStep(s.children);
-            if (found) extracted = found;
-            return { ...s, children: newChildren };
-          }
-          return s;
-        });
-        return [newList, extracted];
-      };
+    if (existingStep) {
+      // ATOMIC MOVE: We need to remove it from its old position and add it to the new one in one state update
+      // However, triggers and steps are in different state variables.
+      // If moving a trigger, we must handle both.
 
-      const [tempSteps, foundInSteps] = extractStep(prevSteps);
-      stepToMove = foundInSteps;
+      const isTrigger = ['Webhook', 'Schedule', 'Form Submit', 'Manual Trigger', 'Incoming SFTP', 'Shopify Webhook'].includes(existingStep.type);
 
-      if (!stepToMove) {
-        // Check triggers (though triggers aren't nested, they might be moved to transformers)
-        setTriggers(prevTriggers => {
-          const found = prevTriggers.find(t => t.id === typeOrId);
-          if (found) {
-            stepToMove = found;
-            return prevTriggers.filter(t => t.id !== typeOrId);
-          }
-          return prevTriggers;
-        });
+      if (isTrigger) {
+         setTriggers(prev => prev.filter(t => t.id !== typeOrId));
       }
 
-      const newStep: Step = stepToMove ? { ...stepToMove, branch } : {
+      setSteps(prevSteps => {
+        // Remove from current steps tree
+        const removeFromTree = (list: Step[]): Step[] => {
+          return list
+            .filter(s => s.id !== typeOrId)
+            .map(s => ({
+              ...s,
+              children: s.children ? removeFromTree(s.children) : undefined
+            }));
+        };
+
+        const cleanedSteps = removeFromTree(prevSteps);
+        const stepToInsert = { ...existingStep, branch };
+
+        const insertIntoTree = (list: Step[]): Step[] => {
+          if (parentId === 'root') {
+            const newList = [...list];
+            if (targetIndex !== undefined) {
+              newList.splice(targetIndex, 0, stepToInsert);
+            } else {
+              newList.push(stepToInsert);
+            }
+            return newList;
+          }
+
+          return list.map(s => {
+            if (s.id === parentId) {
+              const children = [...(s.children || [])];
+              if (targetIndex !== undefined) {
+                children.splice(targetIndex, 0, stepToInsert);
+              } else {
+                children.push(stepToInsert);
+              }
+              return { ...s, children };
+            }
+            if (s.children) {
+              return { ...s, children: insertIntoTree(s.children) };
+            }
+            return s;
+          });
+        };
+
+        return insertIntoTree(cleanedSteps);
+      });
+    } else {
+      // ADDING NEW STEP
+      const newStep: Step = {
         id: Math.random().toString(36).substr(2, 9),
         type: typeOrId as StepType,
         label: `New ${typeOrId}`,
@@ -655,27 +701,38 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
         branch
       };
 
-      const insertIntoChildren = (list: Step[]): Step[] => {
-        return list.map(step => {
-          if (step.id === parentId) {
-            const children = [...(step.children || [])];
+      setSteps(prevSteps => {
+        const insertIntoTree = (list: Step[]): Step[] => {
+          if (parentId === 'root') {
+            const newList = [...list];
             if (targetIndex !== undefined) {
-              children.splice(targetIndex, 0, newStep);
+              newList.splice(targetIndex, 0, newStep);
             } else {
-              children.push(newStep);
+              newList.push(newStep);
             }
-            return { ...step, children };
+            return newList;
           }
-          if (step.children) {
-            return { ...step, children: insertIntoChildren(step.children) };
-          }
-          return step;
-        });
-      };
 
-      return insertIntoChildren(tempSteps);
-    });
-  }, []);
+          return list.map(s => {
+            if (s.id === parentId) {
+              const children = [...(s.children || [])];
+              if (targetIndex !== undefined) {
+                children.splice(targetIndex, 0, newStep);
+              } else {
+                children.push(newStep);
+              }
+              return { ...s, children };
+            }
+            if (s.children) {
+              return { ...s, children: insertIntoTree(s.children) };
+            }
+            return s;
+          });
+        };
+        return insertIntoTree(prevSteps);
+      });
+    }
+  }, [steps, triggers, findStepById]);
 
   const handleUpdateStep = useCallback((id: string, updates: Partial<Step>) => {
     const updateInList = (list: Step[]): Step[] => {
@@ -796,39 +853,7 @@ export const StructuredWorkflowEditor = ({ mode = 'workflow' }: { mode?: 'workfl
                     colorClass="border-blue-500"
                     isLast={idx === steps.length - 1}
                     index={idx}
-                    onDropBetween={(targetIdx: number, typeOrId: string) => {
-                        setSteps(prev => {
-                            let stepToMove: Step | undefined;
-                            const extractStep = (list: Step[]): [Step[], Step | undefined] => {
-                                let extracted: Step | undefined;
-                                const newList = list.filter(s => {
-                                    if (s.id === typeOrId) { extracted = s; return false; }
-                                    return true;
-                                }).map(s => {
-                                    if (s.children) {
-                                        const [newChildren, found] = extractStep(s.children);
-                                        if (found) extracted = found;
-                                        return { ...s, children: newChildren };
-                                    }
-                                    return s;
-                                });
-                                return [newList, extracted];
-                            };
-                            const [tempSteps, found] = extractStep(prev);
-                            stepToMove = found;
-
-                            const newStep: Step = stepToMove ? { ...stepToMove, branch: undefined } : {
-                                id: Math.random().toString(36).substr(2, 9),
-                                type: typeOrId as StepType,
-                                label: `New ${typeOrId}`,
-                                config: {}
-                            };
-
-                            const result = [...tempSteps];
-                            result.splice(targetIdx, 0, newStep);
-                            return result;
-                        });
-                    }}
+                    onDropBetween={(targetIdx: number, typeOrId: string) => handleAddNested('root', undefined, typeOrId, targetIdx)}
                   >
                     <TransformerStepCard
                       key={s.id}
