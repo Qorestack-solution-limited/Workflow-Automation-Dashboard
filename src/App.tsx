@@ -14,6 +14,7 @@ import { SettingsView } from "./components/views/SettingsView";
 import { HelpView } from "./components/views/HelpView";
 import { ModulesView } from "./components/views/ModulesView";
 import { WorkflowsView } from "./components/views/WorkflowsView";
+import { TerminalLogicView } from "./components/views/TerminalLogicView";
 
 const App = () => {
   const [activeView, setActiveView] = useState("dashboard");
@@ -58,6 +59,8 @@ const App = () => {
         return <HelpView />;
       case "modules":
         return <ModulesView onEditModule={(name) => handleNavigate("module-editor")} />;
+      case "terminal-logic":
+        return <TerminalLogicView />;
       case "module-editor":
         return <StructuredWorkflowEditor mode="module" key="module-editor" />;
       case "workflows":
