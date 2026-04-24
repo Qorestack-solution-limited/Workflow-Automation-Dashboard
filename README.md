@@ -1,11 +1,13 @@
 
-  # Workflow Automation Dashboard
+# Workflow Automation Dashboard
 
-  This is a code bundle for Workflow Automation Dashboard. The original project is available at https://www.figma.com/design/PI0Rube5puUswQeCiOrUC0/Workflow-Automation-Dashboard.
+Built by `Abdullahi.code`.
 
-  ## Running the code
+This project was crafted with care to explore a modern workflow automation experience: clean interfaces, thoughtful interactions, and a strong foundation for something even bigger. It reflects creativity, patience, and real builder energy.
 
-  Run `npm i` to install the dependencies.
+## Running the code
 
-  Run `npm run dev` to start the development server.
+Run `npm i` to install the dependencies.
+
+Run `npm run dev` to start the development server.
   
