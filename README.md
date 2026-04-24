@@ -1,4 +1,3 @@
-
 # Workflow Automation Dashboard
 
 Built by `Abdullahi.code`.
@@ -10,4 +9,3 @@ This project was crafted with care to explore a modern workflow automation exper
 Run `npm i` to install the dependencies.
 
 Run `npm run dev` to start the development server.
-  
