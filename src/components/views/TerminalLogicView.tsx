@@ -5,7 +5,9 @@ import { Label } from '../ui/label';
 import { Input } from '../ui/input';
 
 export const TerminalLogicView = () => {
-  const [code, setCode] = useState(`/**
+  const [language, setLanguage] = useState<'javascript' | 'php'>('javascript');
+
+  const jsTemplate = `/**
  * @param {Object} input - Incoming data
  * @return {Object} Transformed data
  */
@@ -16,7 +18,22 @@ function transform(input) {
     processed_at: new Date().toISOString(),
     status: 'TRANSFORMED'
   };
-}`);
+}`;
+
+  const phpTemplate = `<?php
+/**
+ * @param array $input - Incoming data
+ * @return array Transformed data
+ */
+function transform(array $input): array {
+    // Your logic here
+    $input['processed_at'] = date('c');
+    $input['status'] = 'TRANSFORMED';
+
+    return $input;
+}`;
+
+  const [code, setCode] = useState(jsTemplate);
 
   const [testInput, setTestInput] = useState('{\n  "order_id": "ORD-123",\n  "amount": 150.00\n}');
   const [testOutput, setTestOutput] = useState('');
@@ -32,7 +49,10 @@ function transform(input) {
           ...inputData,
           processed_at: new Date().toISOString(),
           status: 'TRANSFORMED',
-          _meta: { execution_time: '12ms' }
+          _meta: {
+            execution_time: language === 'php' ? '8ms' : '12ms',
+            runtime: language.toUpperCase()
+          }
         };
         setTestOutput(JSON.stringify(output, null, 2));
       } catch (e) {
@@ -40,6 +60,11 @@ function transform(input) {
       }
       setIsExecuting(false);
     }, 600);
+  };
+
+  const handleLanguageChange = (newLang: 'javascript' | 'php') => {
+    setLanguage(newLang);
+    setCode(newLang === 'javascript' ? jsTemplate : phpTemplate);
   };
 
   return (
@@ -72,9 +97,25 @@ function transform(input) {
         {/* Editor Area */}
         <div className="flex-1 flex flex-col border-r border-gray-200 overflow-hidden">
           <div className="p-3 bg-gray-50 border-b border-gray-200 flex items-center justify-between">
-            <span className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2">
-               <Code size={14} /> script.js
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="text-xs font-bold text-gray-500 uppercase flex items-center gap-2 border-r border-gray-200 pr-4">
+                 <Code size={14} /> {language === 'javascript' ? 'script.js' : 'transform.php'}
+              </span>
+              <div className="flex bg-gray-200 p-0.5 rounded-md">
+                <button
+                  onClick={() => handleLanguageChange('javascript')}
+                  className={`px-3 py-1 text-[10px] font-bold rounded transition-all ${language === 'javascript' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  JS
+                </button>
+                <button
+                  onClick={() => handleLanguageChange('php')}
+                  className={`px-3 py-1 text-[10px] font-bold rounded transition-all ${language === 'php' ? 'bg-white text-blue-600 shadow-xs' : 'text-gray-500 hover:text-gray-700'}`}
+                >
+                  PHP
+                </button>
+              </div>
+            </div>
             <div className="flex gap-1">
                <Button variant="ghost" size="icon" className="h-7 w-7"><Wand2 size={14} className="text-blue-600" /></Button>
             </div>
